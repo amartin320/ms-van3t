@@ -12,6 +12,7 @@ Set(source_files
     helper/trafficManagerServer80211p-helper.cc
     helper/trafficManagerClientLTE-helper.cc
     helper/trafficManagerServerLTE-helper.cc
+    helper/camMonitor-helper.cc
 
 
     model/Applications/areaSpeedAdvisorClient80211p.cc
@@ -25,6 +26,7 @@ Set(source_files
     model/Applications/trafficManagerServerLTE.cc
     model/Applications/emergencyVehicleWarningServer80211p.cc
     model/Applications/emergencyVehicleWarningClient80211p.cc
+    model/Applications/camMonitor.cc
 
     model/Applications/emergencyVehicleAlert.cc
     model/Facilities/denBasicService.cc
@@ -1272,6 +1274,7 @@ set(header_files
     helper/emergencyVehicleAlert-helper.h
     helper/v2xEmulator-helper.h
     helper/simpleCAMSender-helper.h
+    helper/camMonitor-helper.h
 
     model/Applications/areaSpeedAdvisorClient80211p.h
     model/Applications/areaSpeedAdvisorServer80211p.h
@@ -1279,6 +1282,7 @@ set(header_files
     model/Applications/areaSpeedAdvisorServerLTE.h
     model/Applications/emergencyVehicleAlert.h
     model/Applications/simpleCAMSender-gps-tc.h
+    model/Applications/camMonitor.h
 
     model/Facilities/denBasicService.h
     model/Facilities/denData.h
