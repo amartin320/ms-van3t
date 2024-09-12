@@ -125,12 +125,12 @@ build_lib_example(
 #        ${libtraci}
 #)
 
-build_lib_example(
-        NAME v2v-cam
-        SOURCE_FILES v2v-cam.cc
-        LIBRARIES_TO_LINK
-        ${libautomotive}
-        ${libwave}
-        ${libtraci}
-)
+#build_lib_example(
+#        NAME v2v-cam
+#        SOURCE_FILES v2v-cam.cc
+#        LIBRARIES_TO_LINK
+#        ${libautomotive}
+#        ${libwave}
+#        ${libtraci}
+#)
 

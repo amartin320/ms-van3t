@@ -141,7 +141,7 @@ namespace ns3
     m_caService.setSocketTx (m_socket);
     m_caService.setSocketRx (m_socket);
     m_caService.addCARxCallback (std::bind(&camMonitor::receiveCAM,this,std::placeholders::_1,std::placeholders::_2));
-    m_caService.setStationProperties (std::stol(m_id.substr (3)), StationType_passengerCar);
+    m_caService.setStationProperties (std::stol(m_id.substr (4,4)), StationType_roadSideUnit);
     m_caService.setRealTime (m_real_time);
     VDP* traci_vdp = new VDPTraCI(m_client,m_id);
 
