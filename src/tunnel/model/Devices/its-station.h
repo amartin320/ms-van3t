@@ -10,14 +10,14 @@
 
 namespace ns3 {
 
-class obu : public Object
+class ItsStation : public Object
 {
   public:
     
-    obu (Ptr<Node> node);
-    obu (Ptr<Node> node, std::string v2x_technology);
+    ItsStation ();
+    ItsStation (std::string v2x_technology);
 
-    virtual ~obu ();
+    virtual ~ItsStation ();
 
     void Configure(void);
     void Configure80211p(std::string phyMode, double txPowerDbm);
@@ -38,12 +38,8 @@ class obu : public Object
     double GetTxPowerDbm (void) const;
 
     Ptr<BSContainer> m_bs_container;
-    
-
 
   protected:
-
-  private:
 
     // Generic parameters
     bool m_debug; //!< Flag to enable debug output
@@ -61,6 +57,10 @@ class obu : public Object
 
     unsigned long m_nodeID;
     Ptr<Socket> m_sock;
+
+  private:
+
+    
     
     
   };

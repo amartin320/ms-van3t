@@ -88,7 +88,6 @@ int main (int argc, char *argv[])
 {
 
   std::string phyMode ("OfdmRate6MbpsBW10MHz"); // Default IEEE 802.11p data rate
-  int up=0;
   bool verbose = false; // Set to true to get a lot of verbose output from the IEEE 802.11p PHY model (leave this to false)
   int numberOfVehicles; // Total number of vehicles, automatically filled in by reading the XML file
   int numberOfRSUs; // Total number of vehicles, automatically filled in by reading the XML file
@@ -115,7 +114,6 @@ int main (int argc, char *argv[])
   // Syntax to add new options: cmd.addValue (<option>,<brief description>,<destination variable>)
   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
   cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
-  cmd.AddValue ("userpriority","EDCA User Priority for the ETSI messages",up);
   cmd.AddValue ("baseline", "Baseline for PRR calculation", m_baseline_prr);
   cmd.AddValue ("tx-power", "OBUs transmission power [dBm]", txPower);
   cmd.AddValue ("sim-time", "Total duration of the simulation [s]", simTime);
@@ -172,15 +170,10 @@ int main (int argc, char *argv[])
     }
 
   // Create OBU nodes
-  NodeContainer obuNodes;
-  obuNodes.Create (numberOfVehicles);
-  Ptr<obu> obus[numberOfVehicles];
+  Ptr<ItsStation> obus[numberOfVehicles];
 
   // Create RSU nodes
-  NodeContainer rsuNodes;
-  rsuNodes.Create (numberOfRSUs);
-
-  PacketSocketHelper packetSocket;
+  Ptr<ItsStation> rsus[numberOfRSUs];
 
   // Create propagation channel
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
@@ -188,49 +181,23 @@ int main (int argc, char *argv[])
   wifiChannel.AddPropagationLoss("ns3::FriisPropagationLossModel");
   YansWifiPhyHelper wifiPhy;
 
-  // Initialize OBU radios
+  // Configure vehicle nodes
   for (int i = 0; i<numberOfVehicles; i++) {
-    obus[i] = CreateObject<obu>(obuNodes.Get(i),"802.11p");
+    obus[i] = CreateObject<ItsStation>("802.11p");
     obus[i]->SetChannel(channel);
     obus[i]->SetPhyMode(phyMode);
     obus[i]->SetTxPowerDbm(txPower);
     obus[i]->Configure();
   }
 
-  // Create PHY and MAC for RSUs
-  for (int i = 0; i<numberOfRSUs; i++) {
-    wifiPhy.Set ("TxPowerStart", DoubleValue (txPower));
-    wifiPhy.Set ("TxPowerEnd", DoubleValue (txPower));
-    wifiPhy.SetChannel (channel);
-    // ns-3 supports generating a pcap trace, to be later analyzed in Wireshark
-    wifiPhy.SetPcapDataLinkType (WifiPhyHelper::DLT_IEEE802_11);
-
-    QosWaveMacHelper wifi80211pMac = QosWaveMacHelper::Default ();
-    Wifi80211pHelper wifi80211p = Wifi80211pHelper::Default ();
-
-    wifi80211p.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-                                      "DataMode",StringValue (phyMode),
-                                      "ControlMode",StringValue (phyMode),
-                                      "NonUnicastMode",StringValue (phyMode));
-
-    NetDeviceContainer netDevice;
-    netDevice = wifi80211p.Install (wifiPhy, wifi80211pMac, rsuNodes.Get(i));
-    packetSocket.Install(rsuNodes.Get(i));
-
+  // Configure RSU nodes 
+  for (int i = 0; i<numberOfVehicles; i++) {
+    rsus[i] = CreateObject<ItsStation>("802.11p");
+    rsus[i]->SetChannel(channel);
+    rsus[i]->SetPhyMode(phyMode);
+    rsus[i]->SetTxPowerDbm(txPower);
+    rsus[i]->Configure();
   }
-  
-
-  if (verbose)
-    {
-      // wifi80211p.EnableLogComponents ();      // Turn on all Wifi 802.11p logging, only if verbose is true
-
-    }
-
-  // Set up the link between SUMO and ns-3, to make each node "mobile" (i.e., linking each ns-3 node to each moving vehicle in ns-3,
-  // which corresponds to installing the network stack to each SUMO vehicle)
-
-  MobilityHelper mobilityRSU;
-  mobilityRSU.Install (rsuNodes);
 
   // Set up the TraCI interface and start SUMO with the default parameters
   // The simulation time step can be tuned by changing "SynchInterval"
@@ -247,22 +214,12 @@ int main (int argc, char *argv[])
   sumoClient->SetAttribute ("SumoSeed", IntegerValue (10));
   sumoClient->SetAttribute ("SumoWaitForSocket", TimeValue (Seconds (1.0)));
   sumoClient->SetAttribute ("SumoAdditionalCmdOptions", StringValue (sumo_additional_options));
-
-  // Set up a Metricsupervisor
-  // This module enables a trasparent and seamless collection of one-way latency (in ms) and PRR metrics
-  Ptr<MetricSupervisor> metSup = NULL;
-  // Set a baseline for the PRR computation when creating a new Metricsupervisor object
-  MetricSupervisor metSupObj(m_baseline_prr);
-  metSup = &metSupObj;
-  metSup->setTraCIClient(sumoClient);
   
   // Create RSU Apps
 
   camMonitorHelper CAM_MonitorHelper;
   CAM_MonitorHelper.SetAttribute ("Client", (PointerValue) sumoClient);
   CAM_MonitorHelper.SetAttribute ("RealTime", BooleanValue(false));
-  CAM_MonitorHelper.SetAttribute ("CSV", StringValue("file.csv"));
-  CAM_MonitorHelper.SetAttribute ("MetricSupervisor", PointerValue (metSup));
 
   int i = 0;
   for (auto rsu : rsuData)
@@ -270,7 +227,7 @@ int main (int argc, char *argv[])
       std::string id = std::get<0>(rsu);
       float x = std::get<1>(rsu);
       float y = std::get<2>(rsu);
-      Ptr<Node> rsuNode = rsuNodes.Get (i);
+      Ptr<Node> rsuNode = rsus[i]->GetNode();
       sumoClient->AddStation(id, x, y, 0.0, rsuNode);
       ApplicationContainer AppServer = CAM_MonitorHelper.Install (rsuNode);
       AppServer.Start (Seconds (0.0));

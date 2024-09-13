@@ -1,5 +1,5 @@
 
-#include "obu.h"
+#include "its-station.h"
 #include "ns3/core-module.h"
 #include "ns3/yans-wifi-helper.h"
 #include "ns3/wifi-80211p-helper.h"
@@ -18,28 +18,28 @@
 
 namespace ns3
 {
-    NS_LOG_COMPONENT_DEFINE("obu");
-
-    obu::obu (Ptr<Node> node)
+    NS_LOG_COMPONENT_DEFINE("ItsStation");
+    
+    ItsStation::ItsStation ()
     {
         NS_LOG_FUNCTION(this);
         m_debug = false;
-        m_node = node;
+        m_node = CreateObject<Node>();
         m_v2x_technology = "802.11p";
         m_phyMode = "OfdmRate6MbpsBW10MHz";
         m_txPowerDbm = 23.0;
     }
 
-    obu::~obu ()
+    ItsStation::~ItsStation ()
     {
         NS_LOG_FUNCTION(this);
     }
 
-    obu::obu (Ptr<Node> node, std::string v2x_technology)
+    ItsStation::ItsStation (std::string v2x_technology)
     {
         NS_LOG_FUNCTION(this);
         m_debug = false;
-        m_node = node;
+        m_node = CreateObject<Node>();
         m_v2x_technology = v2x_technology;
         if(v2x_technology == "802.11p")
         {
@@ -51,7 +51,7 @@ namespace ns3
 
     // Initialization
     void
-    obu::Configure(void)
+    ItsStation::Configure(void)
     {
         NS_LOG_FUNCTION(this);
 
@@ -73,7 +73,7 @@ namespace ns3
     }
 
     void
-    obu::Configure80211p(std::string phyMode, double txPowerDbm)
+    ItsStation::Configure80211p(std::string phyMode, double txPowerDbm)
     {
         NS_LOG_FUNCTION(this);
 
@@ -110,7 +110,7 @@ namespace ns3
     }
 
     void 
-    obu::Initialize(unsigned long nodeID, Ptr<TraciClient> sumoClient)
+    ItsStation::Initialize(unsigned long nodeID, Ptr<TraciClient> sumoClient)
     {
 
         m_nodeID = nodeID;
@@ -146,28 +146,28 @@ namespace ns3
 
     // Setters
     void 
-    obu::SetChannel(Ptr<YansWifiChannel> channel)
+    ItsStation::SetChannel(Ptr<YansWifiChannel> channel)
     {
         NS_LOG_FUNCTION(this);
         m_channel_8011p = channel;
     }
 
     void
-    obu::SetV2XTechnology (std::string v2x_technology)
+    ItsStation::SetV2XTechnology (std::string v2x_technology)
     {
         NS_LOG_FUNCTION(this);
         m_v2x_technology = v2x_technology;
     }
 
     void
-    obu::SetPhyMode (std::string phyMode)
+    ItsStation::SetPhyMode (std::string phyMode)
     {
         NS_LOG_FUNCTION(this);
         m_phyMode = phyMode;
     }
 
     void
-    obu::SetTxPowerDbm (double txPowerDbm)
+    ItsStation::SetTxPowerDbm (double txPowerDbm)
     {
         NS_LOG_FUNCTION(this);
         m_txPowerDbm = txPowerDbm;
@@ -175,14 +175,14 @@ namespace ns3
      
     // Getters  
     Ptr<Node>
-    obu::GetNode(void)
+    ItsStation::GetNode(void)
     {
         NS_LOG_FUNCTION(this);
         return m_node;
     }
 
     Ptr<Channel>
-    obu::GetChannel(void)
+    ItsStation::GetChannel(void)
     {
         NS_LOG_FUNCTION(this);
         if(m_v2x_technology == "802.11p")
@@ -196,19 +196,19 @@ namespace ns3
     }
 
     std::string 
-    obu::GetV2XTechnology (void) const
+    ItsStation::GetV2XTechnology (void) const
     {
         NS_LOG_FUNCTION(this);
         return m_v2x_technology;
     }
     std::string
-    obu::GetPhyMode (void) const
+    ItsStation::GetPhyMode (void) const
     {
         NS_LOG_FUNCTION(this);
         return m_phyMode;
     }
     double
-    obu::GetTxPowerDbm (void) const
+    ItsStation::GetTxPowerDbm (void) const
     {
         NS_LOG_FUNCTION(this);
         return m_txPowerDbm;
