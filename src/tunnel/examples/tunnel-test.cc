@@ -19,7 +19,7 @@ int main (int argc, char *argv[])
 
     Ptr<obu> obu1 = CreateObject<obu> ("802.11p");
     obu1->SetChannel(channel);
-    obu1->initialize();
+    obu1->Initialize();
     
     return 0;
 }
