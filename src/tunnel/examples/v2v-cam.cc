@@ -70,7 +70,6 @@ NS_LOG_COMPONENT_DEFINE ("V2Vcam");
 
 // ******* DEFINE HERE ANY LOCAL GLOBAL VARIABLE, ACCESSIBLE FROM ANY FUNCTION IN THIS FILE *******
 // Variables defined here should always be "static"
-static int packet_count=0;
 BSMap basicServices; // Container for all ETSI Basic Services, installed on all vehicles
 // ************************************************************************************************
 
@@ -84,11 +83,6 @@ BSMap basicServices; // Container for all ETSI Basic Services, installed on all 
 //   global Basic Services container with basicServices.get(my_stationID)->getTraCIclient ()
 // The string ID of the vehicle should match the one in the XML file, i.e., for vehicle 7, the string id should be "veh7"
 // After these two lines, pos.y will contain the latitude of the vehicle, while pos.x the longitude of the vehicle
-void receiveCAM(asn1cpp::Seq<CAM> cam, Address from, StationID_t my_stationID, StationType_t my_StationType, SignalInfo phy_info)
-{
-  packet_count++;
-}
-
 
 int main (int argc, char *argv[])
 {
@@ -96,7 +90,7 @@ int main (int argc, char *argv[])
   std::string phyMode ("OfdmRate6MbpsBW10MHz"); // Default IEEE 802.11p data rate
   int up=0;
   bool verbose = false; // Set to true to get a lot of verbose output from the IEEE 802.11p PHY model (leave this to false)
-  int numberOfNodes; // Total number of vehicles, automatically filled in by reading the XML file
+  int numberOfVehicles; // Total number of vehicles, automatically filled in by reading the XML file
   int numberOfRSUs; // Total number of vehicles, automatically filled in by reading the XML file
   double m_baseline_prr = 150.0; // PRR baseline value (default: 150 m)
   int txPower = 23.0; // IEEE 802.11p transmission power in dBm (default: 23 dBm)
@@ -138,11 +132,11 @@ int main (int argc, char *argv[])
     {
       std::cout <<  "Verbose mode enabled" << std::endl;
       LogComponentEnable ("V2Vcam", LOG_LEVEL_ALL);
-      LogComponentEnable ("CABasicService", LOG_LEVEL_ALL);
-      LogComponentEnable ("DENBasicService", LOG_LEVEL_ALL);
-      LogComponentEnable ("GeoNet", LOG_LEVEL_ALL);
-      LogComponentEnable ("btp", LOG_LEVEL_ALL);
-      LogComponentEnable ("TraceHelper", LOG_LEVEL_ALL);
+      //LogComponentEnable ("CABasicService", LOG_LEVEL_ALL);
+      //LogComponentEnable ("DENBasicService", LOG_LEVEL_ALL);
+      //LogComponentEnable ("GeoNet", LOG_LEVEL_ALL);
+      //LogComponentEnable ("btp", LOG_LEVEL_ALL);
+      //LogComponentEnable ("TraceHelper", LOG_LEVEL_ALL);
       //LogComponentEnable ("PacketSocket", LOG_LEVEL_ALL);
       //LogComponentEnable ("Node", LOG_LEVEL_ALL);
       //LogComponentEnable ("NetDevice", LOG_LEVEL_ALL);
@@ -159,8 +153,8 @@ int main (int argc, char *argv[])
     {
       NS_FATAL_ERROR("Error: unable to parse the specified XML file: "<<path);
     }
-  numberOfNodes = XML_rou_count_vehicles(rou_xml_file);
-  std::cout << "Number of vehicles: " << numberOfNodes << std::endl;
+  numberOfVehicles = XML_rou_count_vehicles(rou_xml_file);
+  std::cout << "Number of vehicles: " << numberOfVehicles << std::endl;
 
   /* Load RSU file*/
   std::string rsu_path = sumo_folder + rsu_file;
@@ -172,14 +166,15 @@ int main (int argc, char *argv[])
   xmlCleanupParser();
 
   // Check if there are enough nodes
-  if(numberOfNodes==-1)
+  if(numberOfVehicles==-1)
     {
       NS_FATAL_ERROR("Fatal error: cannot gather the number of vehicles from the specified XML file: "<<path<<". Please check if it is a correct SUMO file.");
     }
 
   // Create OBU nodes
   NodeContainer obuNodes;
-  obuNodes.Create (numberOfNodes);
+  obuNodes.Create (numberOfVehicles);
+  Ptr<obu> obus[numberOfVehicles];
 
   // Create RSU nodes
   NodeContainer rsuNodes;
@@ -193,26 +188,13 @@ int main (int argc, char *argv[])
   wifiChannel.AddPropagationLoss("ns3::FriisPropagationLossModel");
   YansWifiPhyHelper wifiPhy;
 
-  // Create PHY and MAC for OBUs
-  for (int i = 0; i<numberOfNodes; i++) {
-    wifiPhy.Set ("TxPowerStart", DoubleValue (txPower));
-    wifiPhy.Set ("TxPowerEnd", DoubleValue (txPower));
-    wifiPhy.SetChannel (channel);
-    // ns-3 supports generating a pcap trace, to be later analyzed in Wireshark
-    wifiPhy.SetPcapDataLinkType (WifiPhyHelper::DLT_IEEE802_11);
-
-    QosWaveMacHelper wifi80211pMac = QosWaveMacHelper::Default ();
-    Wifi80211pHelper wifi80211p = Wifi80211pHelper::Default ();
-
-    wifi80211p.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-                                      "DataMode",StringValue (phyMode),
-                                      "ControlMode",StringValue (phyMode),
-                                      "NonUnicastMode",StringValue (phyMode));
-
-    NetDeviceContainer netDevice;
-    netDevice = wifi80211p.Install (wifiPhy, wifi80211pMac, obuNodes.Get(i));
-    packetSocket.Install(obuNodes.Get(i));
-
+  // Initialize OBU radios
+  for (int i = 0; i<numberOfVehicles; i++) {
+    obus[i] = CreateObject<obu>(obuNodes.Get(i),"802.11p");
+    obus[i]->SetChannel(channel);
+    obus[i]->SetPhyMode(phyMode);
+    obus[i]->SetTxPowerDbm(txPower);
+    obus[i]->Configure();
   }
 
   // Create PHY and MAC for RSUs
@@ -246,8 +228,7 @@ int main (int argc, char *argv[])
 
   // Set up the link between SUMO and ns-3, to make each node "mobile" (i.e., linking each ns-3 node to each moving vehicle in ns-3,
   // which corresponds to installing the network stack to each SUMO vehicle)
-  MobilityHelper mobilityVehicles;
-  mobilityVehicles.Install (obuNodes);
+
   MobilityHelper mobilityRSU;
   mobilityRSU.Install (rsuNodes);
 
@@ -304,72 +285,23 @@ int main (int argc, char *argv[])
 
   std::cout << "Starting simulation... " << std::endl;
 
-  // Important: what you write inside setupNewWifiNode() will be executed every time a new vehicle enters the simulation in SUMO
-  // This kind of "std::function" is called lambda function, and it can access all variables outside its scope, thanks to the [&] capture
-  // We setup here the ETSI stack for each vehicle (except the one generating interfering traffic), thanks to the BSContainer object
-  // Furthermore, we schedule the transmission of interfering traffic for vehicle 3 only ("veh3")
   STARTUP_FCN setupNewWifiNode = [&] (std::string vehicleID) -> Ptr<Node>
     {
       unsigned long nodeID = std::stol(vehicleID.substr (3));
-      YansWifiPhyHelper wifiPhy;
-
-      // Create a new ETSI GeoNetworking socket, thanks to the GeoNet::createGNPacketSocket() function, accepting as argument a pointer to the current node
-      Ptr<Socket> sock;
-      sock=GeoNet::createGNPacketSocket(obuNodes.Get(nodeID));
-      // Set the proper AC, through the specified UP
-      sock->SetPriority (up);
-      
-      // Create a new Basic Service Container object, which includes, for the current vehicle, both the ETSI CA Basic Service, for the transmission/reception
-      // of periodic CAMs, and the ETSI DEN Basic Service, for the transmission/reception of event-based DENMs
-      // An ETSI Basic Services container is a wrapper class to enable easy handling of both CAMs and DENMs
-      // The station ID is set to be equal to the SUMO ID without "veh" (i.e., the station ID of "veh1" will be "1")
-      Ptr<BSContainer> bs_container = CreateObject<BSContainer>(std::stol(vehicleID.substr(3)),StationType_passengerCar,sumoClient,false,sock);
-      // Setup the PRRsupervisor inside the BSContainer, to make each vehicle collect latency and PRR metrics
-      bs_container->linkMetricSupervisor(metSup);
-      // This is needed just to simplify the whole application
-      bs_container->disablePRRSupervisorForGNBeacons ();
-
-      // Set the function which will be called every time a CAM is received, i.e., receiveCAM()
-      bs_container->addCAMRxCallback (std::bind(&receiveCAM,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5));
-      // Setup the new ETSI Basic Services container
-      // The first parameter is true is you want to setup a CA Basic Service (for sending/receiving CAMs)
-      // The second parameter should be true if you want to setup a DEN Basic Service (for sending/receiving DENMs)
-      // The third parameter should be true if you want to setup a VRU Basic Service (for sending/receiving VAMs)
-      bs_container->setupContainer(true,false,false,false);
-
-      // Store the container for this vehicle inside a local global BSMap, i.e., a structure (similar to a hash table) which allows you to easily
-      // retrieve the right BSContainer given a vehicle ID
-      basicServices.add(bs_container);
-
-      // Start transmitting CAMs
-      // We randomize the instant in time in which the CAM dissemination is going to start
-      // This simulates different startup times for the OBUs of the different vehicles, and
-      // reduces the risk of multiple vehicles trying to send CAMs are the same time (causing more collisions);
-      // "desync" is a value between 0 and 1 (seconds) after which the CAM dissemination should start
-      std::srand(Simulator::Now().GetNanoSeconds ()*2); // Seed based on the simulation time to give each vehicle a different random seed
-      double desync = ((double)std::rand()/RAND_MAX);
-      bs_container->getCABasicService ()->startCamDissemination (desync);
-      wifiPhy.EnablePcap("veh", obuNodes.Get(nodeID)->GetDevice(0));
-      std::cout << "[t = " << Simulator::Now().GetSeconds() << " s] Node "<< nodeID << " initialized!" << std::endl;
-      return obuNodes.Get(nodeID);
+      obus[nodeID]->Initialize(nodeID, sumoClient);
+      return obus[nodeID]->GetNode();
     };
 
-  // Important: what you write here is called every time a node exits the simulation in SUMO
-  // You can safely keep this function as it is, and ignore it
-  SHUTDOWN_FCN shutdownWifiNode = [] (Ptr<Node> exNode, std::string vehicleID)
+  SHUTDOWN_FCN shutdownWifiNode = [&] (Ptr<Node> exNode, std::string vehicleID)
     {
-      /* Set position outside communication range */
+      unsigned long nodeID = std::stol(vehicleID.substr (3));
+
+      // Set position outside communication range 
       Ptr<ConstantPositionMobilityModel> mob = exNode->GetObject<ConstantPositionMobilityModel>();
-      mob->SetPosition(Vector(-1000000.0+(rand()%25),3200000.0+(rand()%25),250.0));
-
-      // Turn off the Basic Services and the ETSI ITS-G5 stack for the vehicle
-      // which has exited from the simulated scenario, and should be thus no longer considered
-      // We need to get the right Ptr<BSContainer> based on the station ID (not the nodeID used
-      // as index for the obuNodes), so we don't use "-1" to compute "intVehicleID" here
-      unsigned long intVehicleID = std::stol(vehicleID.substr (3));
-
-      Ptr<BSContainer> bsc = basicServices.get(intVehicleID);
-      bsc->cleanup();
+      mob->SetPosition(Vector(-1000000.0+(rand()%25),3200000.0+(rand()%25),250.0));;
+      
+      // Clean up BS container
+      obus[nodeID]->m_bs_container->cleanup();
     };
 
 
@@ -446,21 +378,9 @@ int main (int argc, char *argv[])
 
     Simulator::Stop (Seconds(simTime));
     Simulator::Run ();
-    
-    // When the simulation is terminated, gather the most relevant metrics from the PRRsupervisor
+
     std::cout << "Run terminated..." << std::endl;
 
-    std::cout << "Average PRR: " << metSup->getAveragePRR_overall () << std::endl;
-    std::cout << "Average latency (ms): " << metSup->getAverageLatency_overall () << std::endl;
-
-    // std::cout << "Average latency veh 1 (ms): " << metSup->getAverageLatency_vehicle (1) << std::endl;
-
-    std::cout << "RX packet count: " << packet_count << std::endl;
-    std::cout << "RX packet count (from PRR Supervisor): " << metSup->getNumberRx_overall () << std::endl;
-    std::cout << "TX packet count (from PRR Supervisor): " << metSup->getNumberTx_overall () << std::endl;
-
-    std::cout << "Average number of vehicle within the " << m_baseline_prr << " m baseline: " << metSup->getAverageNumberOfVehiclesInBaseline_overall () << std::endl;
-    
 
     Simulator::Destroy ();
   
