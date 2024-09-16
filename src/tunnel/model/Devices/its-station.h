@@ -42,6 +42,8 @@ class ItsStation : public Object
 
     Ptr<BSContainer> m_bs_container;
 
+    void Destroy (void) const;
+
   protected:
 
     // Generic parameters

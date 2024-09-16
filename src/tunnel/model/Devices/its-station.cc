@@ -178,7 +178,14 @@ namespace ns3
         NS_LOG_FUNCTION(this);
         return m_txPowerDbm;
     }
-
+    
+    void
+    ItsStation::Destroy (void) const
+    {
+        NS_LOG_FUNCTION(this);
+        m_sock->Close();
+        m_node->Dispose();
+    }
 }
 
 

@@ -62,6 +62,7 @@
 #include "ns3/wave-mac-helper.h"
 #include "ns3/packet-socket-helper.h"
 #include "ns3/gn-utils.h"
+#include "ns3/propagation-module.h"
 
 
 using namespace ns3;
@@ -183,8 +184,8 @@ int main (int argc, char *argv[])
 
   // Create propagation channel
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
-  //wifiChannel.AddPropagationLoss("ns3::FriisPropagationLossModel");
   Ptr<YansWifiChannel> channel = wifiChannel.Create ();
+  
   YansWifiPhyHelper wifiPhy;
 
   // Configure vehicle nodes
