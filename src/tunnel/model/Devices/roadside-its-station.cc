@@ -34,6 +34,38 @@ namespace ns3
     {
         NS_LOG_FUNCTION(this);
     }
+
+    void
+    RoadsideItsStation::Initialize(unsigned long nodeID, Ptr<TraciClient> sumoClient) 
+    {
+        NS_LOG_FUNCTION(this);
+
+        YansWifiPhyHelper wifiPhy;
+        std::string id = sumoClient->GetStationId (this->GetNode ());
+        unsigned long m_nodeID = std::stol(id.substr (4,4));
+
+        /* Create the socket for TX and RX */
+        TypeId tid = TypeId::LookupByName ("ns3::PacketSocketFactory");
+
+        m_sock=GeoNet::createGNPacketSocket(m_node);
+
+        // Create a new Basic Service Container object
+        m_bs_container = CreateObject<BSContainer>(m_nodeID,StationType_roadSideUnit,sumoClient,false,m_sock); 
+        m_bs_container -> setupContainerRSU(true,false,false,false);
+
+        Ptr<CABasicService> caService = m_bs_container->getCABasicService();
+        
+        libsumo::TraCIPosition rsuPosXY = sumoClient->TraCIAPI::poi.getPosition (id);
+        libsumo::TraCIPosition rsuPosLonLat = sumoClient->TraCIAPI::simulation.convertXYtoLonLat (rsuPosXY.x,rsuPosXY.y);
+        caService->setFixedPositionRSU (rsuPosLonLat.y,rsuPosLonLat.x);
+
+        // Start capturing packets into a PCAP file
+        wifiPhy.EnablePcap("rsu", m_node->GetDevice(0));
+        // Output initialization message
+        std::cout << "[t = " << Simulator::Now().GetSeconds() << " s] RSU node "<< nodeID << " initialized!" << std::endl;
+
+
+    }
     
 }
 

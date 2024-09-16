@@ -66,7 +66,7 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("V2Vcam");
+NS_LOG_COMPONENT_DEFINE ("V2Xcam");
 
 // ******* DEFINE HERE ANY LOCAL GLOBAL VARIABLE, ACCESSIBLE FROM ANY FUNCTION IN THIS FILE *******
 // Variables defined here should always be "static"
@@ -129,16 +129,22 @@ int main (int argc, char *argv[])
   if (verbose)
     {
       std::cout <<  "Verbose mode enabled" << std::endl;
-      LogComponentEnable ("V2Vcam", LOG_LEVEL_ALL);
-      //LogComponentEnable ("CABasicService", LOG_LEVEL_ALL);
-      //LogComponentEnable ("DENBasicService", LOG_LEVEL_ALL);
-      //LogComponentEnable ("GeoNet", LOG_LEVEL_ALL);
-      //LogComponentEnable ("btp", LOG_LEVEL_ALL);
-      //LogComponentEnable ("TraceHelper", LOG_LEVEL_ALL);
+      LogComponentEnable ("V2Xcam", LOG_LEVEL_ALL);
+      LogComponentEnable ("CABasicService", LOG_LEVEL_ALL);
+      LogComponentEnable ("DENBasicService", LOG_LEVEL_ALL);
+      LogComponentEnable ("GeoNet", LOG_LEVEL_ALL);
+      LogComponentEnable ("btp", LOG_LEVEL_ALL);
+      LogComponentEnable ("TraceHelper", LOG_LEVEL_ALL);
       //LogComponentEnable ("PacketSocket", LOG_LEVEL_ALL);
       //LogComponentEnable ("Node", LOG_LEVEL_ALL);
       //LogComponentEnable ("NetDevice", LOG_LEVEL_ALL);
+      //LogComponentEnable ("Socket", LOG_LEVEL_ALL);
       //LogComponentEnable ("TraciClient", LOG_LEVEL_ALL);
+      LogComponentEnable ("ItsStation", LOG_LEVEL_ALL);
+      LogComponentEnable ("VehicleItsStation", LOG_LEVEL_ALL);
+      LogComponentEnable ("RoadsideItsStation", LOG_LEVEL_ALL);
+      LogComponentEnable ("camMonitor", LOG_LEVEL_ALL);
+      LogComponentEnable ("YansWifiChannel", LOG_LEVEL_ALL);
       
 
     }
@@ -177,8 +183,8 @@ int main (int argc, char *argv[])
 
   // Create propagation channel
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
+  //wifiChannel.AddPropagationLoss("ns3::FriisPropagationLossModel");
   Ptr<YansWifiChannel> channel = wifiChannel.Create ();
-  wifiChannel.AddPropagationLoss("ns3::FriisPropagationLossModel");
   YansWifiPhyHelper wifiPhy;
 
   // Configure vehicle nodes
@@ -188,17 +194,18 @@ int main (int argc, char *argv[])
     obus[i]->SetPhyMode(phyMode);
     obus[i]->SetTxPowerDbm(txPower);
     obus[i]->Configure();
+
   }
 
   // Configure RSU nodes 
-  for (int i = 0; i<numberOfVehicles; i++) {
+  for (int i = 0; i<numberOfRSUs; i++) {
     rsus[i] = CreateObject<RoadsideItsStation>("802.11p");
     rsus[i]->SetChannel(channel);
     rsus[i]->SetPhyMode(phyMode);
     rsus[i]->SetTxPowerDbm(txPower);
     rsus[i]->Configure();
   }
-
+  
   // Set up the TraCI interface and start SUMO with the default parameters
   // The simulation time step can be tuned by changing "SynchInterval"
   Ptr<TraciClient> sumoClient = CreateObject<TraciClient> ();
@@ -217,26 +224,12 @@ int main (int argc, char *argv[])
   
   // Create RSU Apps
 
-  camMonitorHelper CAM_MonitorHelper;
-  CAM_MonitorHelper.SetAttribute ("Client", (PointerValue) sumoClient);
-  CAM_MonitorHelper.SetAttribute ("RealTime", BooleanValue(false));
+  //camMonitorHelper CAM_MonitorHelper;
+  //CAM_MonitorHelper.SetAttribute ("Client", (PointerValue) sumoClient);
+  //CAM_MonitorHelper.SetAttribute ("RealTime", BooleanValue(false));
 
-  int i = 0;
-  for (auto rsu : rsuData)
-    {
-      std::string id = std::get<0>(rsu);
-      float x = std::get<1>(rsu);
-      float y = std::get<2>(rsu);
-      Ptr<Node> rsuNode = rsus[i]->GetNode();
-      sumoClient->AddStation(id, x, y, 0.0, rsuNode);
-      ApplicationContainer AppServer = CAM_MonitorHelper.Install (rsuNode);
-      AppServer.Start (Seconds (0.0));
-      AppServer.Stop (ns3::Seconds(simTime) - Seconds (0.1));
-      ++i;
-    }
   
-  // This function enables printing the current and average latency and PRR for each received packet
-  // metSup->enablePRRVerboseOnStdout ();
+  
 
   std::cout << "A transmission power of " << txPower << " dBm  will be used." << std::endl;
 
@@ -246,7 +239,9 @@ int main (int argc, char *argv[])
     {
       unsigned long nodeID = std::stol(vehicleID.substr (3));
       obus[nodeID]->Initialize(nodeID, sumoClient);
-      return obus[nodeID]->GetNode();
+      Ptr<Node> node = obus[nodeID]->GetNode();
+      std::cout << node << std::endl;
+      return node;
     };
 
   SHUTDOWN_FCN shutdownWifiNode = [&] (Ptr<Node> exNode, std::string vehicleID)
@@ -261,75 +256,25 @@ int main (int argc, char *argv[])
       obus[nodeID]->m_bs_container->cleanup();
     };
 
-
     sumoClient->SumoSetup (setupNewWifiNode, shutdownWifiNode);
 
-    // Set up RSUs
-  // uint32_t i = 0;
-  // for (auto rsu : rsuData)
-  //   {
-  //     YansWifiPhyHelper wifiPhy;
-  //     // Add RSU to the simulation and to SUMO
-  //     std::string id = std::get<0>(rsu);
-  //     unsigned long nodeID = std::stol(id.substr (4,4));
-  //     std::cout << "Adding RSU " << nodeID << " to the simulation..." << std::endl;
-  //     float x = std::get<1>(rsu);
-  //     float y = std::get<2>(rsu);
-  //     Ptr<Node> rsuNode = rsuNodes.Get (i);
-  //     sumoClient->AddStation(id, x, y, 0.0, rsuNode);
-
-  //     // Install the application for the RSU
-  //     TypeId tid = TypeId::LookupByName ("ns3::PacketSocketFactory");
-  //     Ptr<Socket> socket = Socket::CreateSocket (rsuNode, tid);
-
-  //     /* Bind the socket to local address */
-  //     PacketSocketAddress local;
-  //     local.SetSingleDevice (rsuNode->GetDevice (0)->GetIfIndex ());
-  //     local.SetPhysicalAddress (rsuNode->GetDevice (0)->GetAddress ());
-  //     local.SetProtocol (0x8947);
-  //     if (socket->Bind (local) == -1)
-  //     {
-  //       NS_FATAL_ERROR ("Failed to bind server socket");
-  //     }
-
-  //     /* Set socket to broacdcast */
-  //     PacketSocketAddress remote;
-  //     remote.SetSingleDevice (rsuNode->GetDevice (0)->GetIfIndex ());
-  //     remote.SetPhysicalAddress (rsuNode->GetDevice (0)->GetBroadcast ());
-  //     remote.SetProtocol (0x8947);
-
-  //     if (socket->Connect(remote) == -1)
-  //     {
-  //       NS_FATAL_ERROR ("Failed to connect server socket");
-  //     } 
-  //     /* Create new BTP and GeoNet objects and set them in DENBasicService and CABasicService */
-  //     Ptr<btp> bbtp = CreateObject <btp>();
-  //     Ptr<GeoNet> geoNet = CreateObject <GeoNet>();
-  //     CABasicService caService;
-  //     bbtp->setGeoNet(geoNet);
-  //     caService.setBTP(bbtp);
-      
-
-  //     /* Set callback and station properties in CABasicService */
-  //     caService.setStationProperties (nodeID, StationType_roadSideUnit);
-  //     caService.setSocketRx (socket);
-  //     caService.setSocketTx (socket);
-  //     caService.addCARxCallbackExtended (std::bind(&receiveCAM,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5));
-      
-  //     libsumo::TraCIPosition rsuPosXY = sumoClient->TraCIAPI::poi.getPosition (id);
-  //     libsumo::TraCIPosition rsuPosLonLat = sumoClient->TraCIAPI::simulation.convertXYtoLonLat (rsuPosXY.x,rsuPosXY.y);
-
-  //     caService.setFixedPositionRSU (rsuPosLonLat.y,rsuPosLonLat.x);
-  //     VDP* traci_vdp = new VDPTraCI(sumoClient, id, true);
-
-  //     caService.setVDP(traci_vdp);
-
-  //     wifiPhy.EnablePcap("rsu", rsuNode->GetDevice(0));
-
-  //     std::cout << "[t = " << Simulator::Now().GetSeconds() << " s] RSU "<< nodeID << " initialized!" << std::endl;
-  //     ++i;
-
-  //   }
+    // Initialize RSUs
+    int i = 0;
+    for (auto rsu : rsuData)
+      {
+        std::string id = std::get<0>(rsu);
+        float x = std::get<1>(rsu);
+        float y = std::get<2>(rsu);
+        Ptr<Node> rsuNode = rsus[i]->GetNode();
+        sumoClient->AddStation(id, x, y, 0.0, rsuNode);
+        unsigned long nodeID = std::stol(id.substr (4,4));
+        rsus[i]->Initialize(nodeID, sumoClient);
+        //ApplicationContainer AppServer = CAM_MonitorHelper.Install (rsuNode);
+        //AppServer.Start (Seconds (0.0));
+        //AppServer.Stop (ns3::Seconds(simTime) - Seconds (0.1));
+        ++i;
+      }
+    
 
     // Start simulation
 

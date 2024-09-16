@@ -23,6 +23,9 @@ class RoadsideItsStation : public ItsStation
 
     virtual ~RoadsideItsStation ();
 
+    void
+    Initialize(unsigned long nodeID, Ptr<TraciClient> sumoClient);
+
   protected:
 
   private:

@@ -94,7 +94,7 @@ namespace ns3
   {
     NS_LOG_FUNCTION(this);
 
-    m_id = m_client->GetVehicleId (this->GetNode ());
+    m_id = m_client->GetStationId (this->GetNode ());
 
     /* Create the socket for TX and RX */
     TypeId tid = TypeId::LookupByName ("ns3::PacketSocketFactory");
@@ -126,14 +126,19 @@ namespace ns3
 
     m_btp->setGeoNet(m_geoNet);
     m_caService.setBTP(m_btp);
-
+    
     /* Set sockets, callback, station properties and TraCI VDP in CABasicService */
     m_caService.setSocketTx (m_socket);
     m_caService.setSocketRx (m_socket);
     m_caService.addCARxCallback (std::bind(&camMonitor::receiveCAM,this,std::placeholders::_1,std::placeholders::_2));
     m_caService.setStationProperties (std::stol(m_id.substr (4,4)), StationType_roadSideUnit);
     m_caService.setRealTime (m_real_time);
-    VDP* traci_vdp = new VDPTraCI(m_client,m_id);
+
+    libsumo::TraCIPosition rsuPosXY = m_client->TraCIAPI::poi.getPosition (m_id);
+    libsumo::TraCIPosition rsuPosLonLat = m_client->TraCIAPI::simulation.convertXYtoLonLat (rsuPosXY.x,rsuPosXY.y);
+    m_caService.setFixedPositionRSU (rsuPosLonLat.y,rsuPosLonLat.x);
+
+    VDP* traci_vdp = new VDPTraCI(m_client,m_id, true);
 
     m_caService.setVDP(traci_vdp);
 

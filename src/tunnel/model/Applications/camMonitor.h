@@ -63,8 +63,6 @@ class camMonitor : public Application
     /* Counters */
     int m_cam_sent;
     bool m_send_cam;
-
-    Ptr<MetricSupervisor> m_metric_supervisor = nullptr;
   };
 
 } // namespace ns3
