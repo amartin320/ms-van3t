@@ -360,16 +360,14 @@ namespace ns3
           {
             // get current vehicle/pedestrian from the map
             std::string node_ID(it->first);
-
             // get vehicle/pedestrian position from sumo
             libsumo::TraCIPosition pos;
             if(it->second.first == StationType_pedestrian)
                pos = this->TraCIAPI::person.getPosition(node_ID);
-            else if (it->second.first == StationType_roadSideUnit)
-              return;
+            else if (it->second.first == StationType_roadSideUnit) 
+               pos = this->TraCIAPI::poi.getPosition(node_ID);
             else
                pos = this->TraCIAPI::vehicle.getPosition(node_ID);
-
             // get corresponding ns3 node from map
             Ptr<MobilityModel> mob = m_NodeMap.at(node_ID).second->GetObject<MobilityModel>();
             // set ns3 node position with user defined altitude
