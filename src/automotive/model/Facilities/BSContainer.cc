@@ -132,6 +132,8 @@ namespace ns3
 
     if(m_stationtype == StationType_pedestrian){
         m_LDM->setStationID (m_sumo_pedid_prefix + std::to_string (m_station_id));
+    } 
+    else if (m_stationtype == StationType_roadSideUnit){
     }
     else{
         m_LDM->setStationID (m_sumo_vehid_prefix + std::to_string (m_station_id));
@@ -152,25 +154,31 @@ namespace ns3
     }
 
     m_btp->setGeoNet (m_gn);
-
+    
     if(CABasicService_enabled==true) {
       m_cabs.setBTP (m_btp);
       m_cabs.setSocketTx (m_socket);
       m_cabs.setSocketRx (m_socket);
       m_cabs.setLDM (m_LDM);
-
+      
+      
       // Remember that setStationProperties() must always be called *after* setBTP()
       m_cabs.setStationProperties (m_station_id, m_stationtype);
 
       if(m_CAReceiveCallbackExtended!=nullptr) {
         m_cabs.addCARxCallbackExtended (m_CAReceiveCallbackExtended);
       }
-
+      
       m_CAMs_enabled = true;
     }
 
     if(m_stationtype != StationType_pedestrian){
+      if (m_stationtype == StationType_roadSideUnit){
+        m_vdp_ptr = new VDPTraCI(m_mobility_client,"poi_" + std::to_string(m_station_id), true);
+      }
+      else {
         m_vdp_ptr = new VDPTraCI(m_mobility_client,m_sumo_vehid_prefix + std::to_string(m_station_id));
+      } 
         m_btp->setVDP(m_vdp_ptr);
 
         if(CABasicService_enabled==true) {
@@ -181,6 +189,7 @@ namespace ns3
             m_cpbs.setVDP (m_vdp_ptr);
           }
       }
+
 
     if(DENBasicService_enabled==true) {
       m_denbs.setBTP (m_btp);
@@ -239,6 +248,107 @@ namespace ns3
       }
 
     m_is_configured = true;
+    
+  }
+
+  void
+  BSContainer::setupContainerRSU(bool CABasicService_enabled,bool DENBasicService_enabled,bool VRUBasicService_enabled,bool CPMBasicService_enabled) {
+    if(CABasicService_enabled==false && DENBasicService_enabled==false && VRUBasicService_enabled==false && CPMBasicService_enabled==false) {
+      NS_FATAL_ERROR("Error. Called setupContainer() asking for enabling zero Basic Services. Aborting simulation.");
+    }
+
+    if(m_socket==nullptr || m_mobility_client==nullptr || m_station_id==ULONG_MAX || m_stationtype==LONG_MAX) {
+      NS_FATAL_ERROR("Error. Attempted to call setupContainer() on an uninitialized BSContainer. Aborting simulation.");
+    }
+
+    // Setup the required services
+    // ETSI Transport and Networking layers
+    m_btp = CreateObject <btp>();
+    m_gn = CreateObject <GeoNet>();
+
+    if(m_metric_sup_ptr!=nullptr) {
+      m_gn->setMetricSupervisor (m_metric_sup_ptr);
+    }
+
+    if(m_prrsup_beacons==false) {
+      m_gn->disablePRRsupervisorForBeacons();
+    }
+
+    m_btp->setGeoNet (m_gn);
+    
+    if(CABasicService_enabled==true) {
+      m_cabs.setBTP (m_btp);
+      m_cabs.setSocketTx (m_socket);
+      m_cabs.setSocketRx (m_socket);      
+      
+      // Remember that setStationProperties() must always be called *after* setBTP()
+      m_cabs.setStationProperties (m_station_id, m_stationtype);
+
+      if(m_CAReceiveCallbackExtended!=nullptr) {
+        m_cabs.addCARxCallbackExtended (m_CAReceiveCallbackExtended);
+      }
+      
+      m_CAMs_enabled = true;
+    }
+
+    if(m_stationtype != StationType_pedestrian){
+        m_vdp_ptr = new VDPTraCI(m_mobility_client,"poi_" + std::to_string(m_station_id), true);
+        m_btp->setVDP(m_vdp_ptr);
+
+        if(CABasicService_enabled==true) {
+          m_cabs.setVDP(m_vdp_ptr);
+        }
+        if (CPMBasicService_enabled==true)
+          {
+            m_cpbs.setVDP (m_vdp_ptr);
+          }
+      }
+
+
+    if(DENBasicService_enabled==true) {
+      m_denbs.setBTP (m_btp);
+      m_denbs.setSocketTx (m_socket);
+      m_denbs.setSocketRx (m_socket);
+      m_denbs.setStationProperties (m_station_id, (long)m_stationtype);
+
+      if(m_DENReceiveCallbackExtended!=nullptr) {
+        m_denbs.addDENRxCallbackExtended (m_DENReceiveCallbackExtended);
+      }
+
+      m_DENMs_enabled = true;
+    }
+
+    if(VRUBasicService_enabled==true) {
+      m_vrubs.setBTP (m_btp);
+      m_vrubs.setSocketTx (m_socket);
+      m_vrubs.setSocketRx (m_socket);
+      m_vrubs.setStationProperties (m_station_id, m_stationtype);
+
+      if(m_VAMReceiveCallback!=nullptr) {
+        m_vrubs.addVAMRxCallback (m_VAMReceiveCallback);
+      }
+
+      m_VAMs_enabled = true;
+    }
+
+    if(CPMBasicService_enabled==true)
+      {
+        m_cpbs.setBTP (m_btp);
+        m_cpbs.setSocketTx (m_socket);
+        m_cpbs.setSocketRx (m_socket);
+
+        // Remember that setStationProperties() must always be called *after* setBTP()
+        m_cpbs.setStationProperties (m_station_id, m_stationtype);
+
+        if(m_CPMReceiveCallbackExtended!=nullptr) {
+            m_cpbs.addCPRxCallbackExtended (m_CPMReceiveCallbackExtended);
+          }
+
+        m_CPMs_enabled = true;
+      }
+
+    m_is_configured = true;
+    
   }
 
   void
