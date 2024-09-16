@@ -59,11 +59,6 @@ namespace ns3
             PointerValue (0),
             MakePointerAccessor (&camMonitor::m_client),
             MakePointerChecker<TraciClient> ())
-        .AddAttribute ("MetricSupervisor",
-            "Metric Supervisor to compute metrics according to 3GPP TR36.885 V14.0.0 page 70",
-            PointerValue (0),
-            MakePointerAccessor (&camMonitor::m_metric_supervisor),
-            MakePointerChecker<MetricSupervisor> ())
         .AddAttribute ("SendCAM",
             "To enable/disable the transmission of CAM messages",
             BooleanValue(true),
@@ -128,11 +123,6 @@ namespace ns3
     /* Create new BTP and GeoNet objects and set them in DENBasicService and CABasicService */
     m_btp = CreateObject <btp>();
     m_geoNet = CreateObject <GeoNet>();
-
-    if(m_metric_supervisor!=nullptr)
-    {
-      m_geoNet->setMetricSupervisor(m_metric_supervisor);
-    }
 
     m_btp->setGeoNet(m_geoNet);
     m_caService.setBTP(m_btp);

@@ -1,3 +1,6 @@
+#ifndef ITS_STATION_H
+#define ITS_STATION_H
+
 #include <string>
 #include "ns3/core-module.h"
 #include "ns3/node.h"
@@ -61,8 +64,8 @@ class ItsStation : public Object
   private:
 
     
-    
-    
   };
 
-} // namespace ns3
+} 
+
+#endif // ITS_STATION_H

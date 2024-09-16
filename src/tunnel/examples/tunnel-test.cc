@@ -17,9 +17,9 @@ int main (int argc, char *argv[])
 
     // Initialize OBU
 
-    Ptr<ItsStation> obu1 = CreateObject<ItsStation> ("802.11p");
+    Ptr<VehicleItsStation> obu1 = CreateObject<VehicleItsStation> ("802.11p");
     obu1->SetChannel(channel);
-    obu1->Initialize();
+    obu1->Configure();
     
     return 0;
 }

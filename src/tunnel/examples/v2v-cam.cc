@@ -170,10 +170,10 @@ int main (int argc, char *argv[])
     }
 
   // Create OBU nodes
-  Ptr<ItsStation> obus[numberOfVehicles];
+  Ptr<VehicleItsStation> obus[numberOfVehicles];
 
   // Create RSU nodes
-  Ptr<ItsStation> rsus[numberOfRSUs];
+  Ptr<RoadsideItsStation> rsus[numberOfRSUs];
 
   // Create propagation channel
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
@@ -183,7 +183,7 @@ int main (int argc, char *argv[])
 
   // Configure vehicle nodes
   for (int i = 0; i<numberOfVehicles; i++) {
-    obus[i] = CreateObject<ItsStation>("802.11p");
+    obus[i] = CreateObject<VehicleItsStation>("802.11p");
     obus[i]->SetChannel(channel);
     obus[i]->SetPhyMode(phyMode);
     obus[i]->SetTxPowerDbm(txPower);
@@ -192,7 +192,7 @@ int main (int argc, char *argv[])
 
   // Configure RSU nodes 
   for (int i = 0; i<numberOfVehicles; i++) {
-    rsus[i] = CreateObject<ItsStation>("802.11p");
+    rsus[i] = CreateObject<RoadsideItsStation>("802.11p");
     rsus[i]->SetChannel(channel);
     rsus[i]->SetPhyMode(phyMode);
     rsus[i]->SetTxPowerDbm(txPower);
