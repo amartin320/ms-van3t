@@ -22,7 +22,7 @@ class ItsStation : public Object
 
     virtual ~ItsStation ();
 
-    void Configure(void);
+    void ConfigureRadio(void);
     void Configure80211p(std::string phyMode, double txPowerDbm);
     void ConfigureLTEV2X(void);
     void ConfigureNRV2X(void);
@@ -49,6 +49,8 @@ class ItsStation : public Object
     // Generic parameters
     bool m_debug; //!< Flag to enable debug output
     Ptr<Node> m_node;
+    NetDeviceContainer m_netDevice;
+    bool m_realtime;
   
     // Radio
     double m_txPowerDbm; //!< Transmission power in dBm
