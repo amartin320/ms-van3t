@@ -36,33 +36,37 @@ namespace ns3
     }
 
     void 
-    VehicleItsStation::Initialize(unsigned long nodeID, Ptr<TraciClient> sumoClient)
+    VehicleItsStation::Initialize(unsigned long nodeID, Ptr<TraciClient> sumoClient, bool realtime)
     {
+        NS_LOG_FUNCTION(this);
+        
+        m_realtime = realtime;
 
+        if (m_node->GetObject<PacketSocketFactory> () == 0) {
+            PacketSocketHelper packetSocket;
+            packetSocket.Install(m_node);
+        }
+        
         m_nodeID = nodeID;
+        
         YansWifiPhyHelper wifiPhy;
 
         // Create a new ETSI GeoNetworking socket
         m_sock=GeoNet::createGNPacketSocket(m_node);
+        
 
         // Create a new Basic Service Container object
-        m_bs_container = CreateObject<BSContainer>(m_nodeID,StationType_passengerCar,sumoClient,false,m_sock);
+        m_bs_container = CreateObject<BSContainer>(m_nodeID,StationType_passengerCar,sumoClient,m_realtime,m_sock);        
 
         // Enable basic services
         m_bs_container->setupContainer(true,true,false,false);
 
-
-        // Start transmitting CAMs
-        // We randomize the instant in time in which the CAM dissemination is going to start
-        // This simulates different startup times for the OBUs of the different vehicles, and
-        // reduces the risk of multiple vehicles trying to send CAMs are the same time (causing more collisions);
-        // "desync" is a value between 0 and 1 (seconds) after which the CAM dissemination should start
-
+        // Start transmitting CAMs, randomizing start time
         std::srand(Simulator::Now().GetNanoSeconds ()*2); // Seed based on the simulation time to give each vehicle a different random seed
         double desync = ((double)std::rand()/RAND_MAX);
         m_bs_container->getCABasicService ()->startCamDissemination (desync);
 
-        // Start capturing packets into a PCAP file
+        // Start capturing Tx/Rx packets into a PCAP file
         wifiPhy.EnablePcap("veh", m_node->GetDevice(0));
 
         // Output initialization message
