@@ -51,23 +51,22 @@ namespace ns3
 
     // Initialization
     void
-    ItsStation::Configure(void)
+    ItsStation::ConfigureRadio(void)
     {
         NS_LOG_FUNCTION(this);
+        // Configure Radio based on V2X technology
 
-        if(m_v2x_technology == "802.11p")
-        {
+        if(m_v2x_technology == "802.11p"){
             Configure80211p(m_phyMode, m_txPowerDbm);
         }
-        else if(m_v2x_technology == "LTE-V2X")
-        {
+        else if(m_v2x_technology == "LTE-V2X"){
             // Initialize LTE-V2X
         }
-        else if (m_v2x_technology == "5G-V2X")
-        {
+        else if (m_v2x_technology == "5G-V2X"){
             // Initialize 5G-V2X
         }
 
+        // Install mobility in node
         MobilityHelper mobility;
         mobility.Install(m_node);
     }
@@ -82,7 +81,6 @@ namespace ns3
 
         
         // Helpers
-        PacketSocketHelper packetSocket;
         YansWifiPhyHelper wifiPhy;
         Wifi80211pHelper wifi80211p = Wifi80211pHelper::Default ();
         QosWaveMacHelper wifi80211pMac = QosWaveMacHelper::Default ();
@@ -102,10 +100,9 @@ namespace ns3
         if (m_debug == true) {
             wifi80211p.EnableLogComponents();
         }
+        
 
-        NetDeviceContainer netDevice;
-        netDevice = wifi80211p.Install (wifiPhy, wifi80211pMac, m_node);
-        packetSocket.Install(m_node);
+        m_netDevice = wifi80211p.Install (wifiPhy, wifi80211pMac, m_node);
         
     }
 
