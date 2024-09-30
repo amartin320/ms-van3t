@@ -19,7 +19,7 @@ int main (int argc, char *argv[])
 
     Ptr<VehicleItsStation> obu1 = CreateObject<VehicleItsStation> ("802.11p");
     obu1->SetChannel(channel);
-    obu1->Configure();
+    obu1->ConfigureRadio();
     
     return 0;
 }

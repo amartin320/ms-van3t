@@ -3,6 +3,7 @@
  * Copyright (c) 2005,2006,2007 INRIA
  * Copyright (c) 2013 Dalian University of Technology
  * Copyright (c) 2022 Politecnico di Torino
+ * Copyright (c) 2024 University of Stavanger
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -20,23 +21,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr> (initial IEEE 802.11p example)
  * Author: Junling Bu <linlinjavaer@gmail.com> (initial IEEE 802.11p example)
  * Author: Francesco Raviglione <francescorav.es483@gmail.com> (IEEE 802.11p simple CAM exchange application)
- *
- * This is a simple example of a ms-van3t V2V communication scenario configured with a single .cc file,
- * where vehicles exchange Cooperative Awareness Messages (CAMs) using the IEEE 802.11p standard.
- * The user can specify several parameters, including the priority (Access Category) for the transmission
- * of CAMs. BSContainers are used to simplify the configuration of the ETSI C-ITS stack of each vehicle.
- * In this scenario, all vehicles transmit CAMs according to the ETSI standards, and one vehicle (vehicle 3)
- * sends a heavy interfering traffic, without useful informative content, to simulate a congested channel.
- * Through the --interfering-userpriority option, the user can specify the Access Category (AC) for the
- * interfering traffic, which is broadcasted by vehicle 3.
- * When a new CAM is received by one of the vehicles, the callback "receiveCAM()" is called, and the stationID of
- * the received is available in "my_stationID".
- * Currently, the function just counts the total number of CAMs, but it can be customized to impement more complex
- * approaches.
- * As output, the simulation provides, thanks to the PRRSupervisor module, the average latency and PRR over the
- * whole simulation, and the average one-way latency for each vehicle up to vehicle 4.
- * The reported latency of vehicle 3 is expected to be 0 as it transmits interfering traffic (so, no ETSI-compliant
- * message is transmitted), that is not considered by the PRRSupervisor.
+ * Author: Aitor Martin Rodriguez <aitor.martinrodriguez@uis.no> 
+
  */
 
 #include "ns3/automotive-module.h"
@@ -69,30 +55,15 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("V2Xcam");
 
-// ******* DEFINE HERE ANY LOCAL GLOBAL VARIABLE, ACCESSIBLE FROM ANY FUNCTION IN THIS FILE *******
-// Variables defined here should always be "static"
-BSMap basicServices; // Container for all ETSI Basic Services, installed on all vehicles
-// ************************************************************************************************
-
-// If you want to make a comparison with a received CAM MAC address, you can use:
-// from == getGNAddress (0,Mac48Address(comparison_string)), where "comparison_string" is something like "00:00:00:00:00:09"
-
-// Useful tip: you can get the latitude and longitude position of a given vehicle at any time with:
-//   libsumo::TraCIPosition pos=<MobilityClient>->TraCIAPI::vehicle.getPosition(<string ID of the vehicle>);
-//   pos=<MobilityClient>->TraCIAPI::simulation.convertXYtoLonLat(pos.x,pos.y);
-// <MobilityClient> should be the right Ptr<TraciClient> for the current vehicle, which can be retrieved from the
-//   global Basic Services container with basicServices.get(my_stationID)->getTraCIclient ()
-// The string ID of the vehicle should match the one in the XML file, i.e., for vehicle 7, the string id should be "veh7"
-// After these two lines, pos.y will contain the latitude of the vehicle, while pos.x the longitude of the vehicle
 
 int main (int argc, char *argv[])
 {
+
 
   std::string phyMode ("OfdmRate6MbpsBW10MHz"); // Default IEEE 802.11p data rate
   bool verbose = false; // Set to true to get a lot of verbose output from the IEEE 802.11p PHY model (leave this to false)
   int numberOfVehicles; // Total number of vehicles, automatically filled in by reading the XML file
   int numberOfRSUs; // Total number of vehicles, automatically filled in by reading the XML file
-  double m_baseline_prr = 150.0; // PRR baseline value (default: 150 m)
   int txPower = 23.0; // IEEE 802.11p transmission power in dBm (default: 23 dBm)
   xmlDocPtr rou_xml_file;
   double simTime = 100.0; // Total simulation time (default: 100 seconds)
@@ -115,7 +86,6 @@ int main (int argc, char *argv[])
   // Syntax to add new options: cmd.addValue (<option>,<brief description>,<destination variable>)
   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
   cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
-  cmd.AddValue ("baseline", "Baseline for PRR calculation", m_baseline_prr);
   cmd.AddValue ("tx-power", "OBUs transmission power [dBm]", txPower);
   cmd.AddValue ("sim-time", "Total duration of the simulation [s]", simTime);
   cmd.AddValue ("sumo-folder","Position of sumo config files",sumo_folder);
@@ -136,10 +106,10 @@ int main (int argc, char *argv[])
       LogComponentEnable ("GeoNet", LOG_LEVEL_ALL);
       LogComponentEnable ("btp", LOG_LEVEL_ALL);
       LogComponentEnable ("TraceHelper", LOG_LEVEL_ALL);
-      //LogComponentEnable ("PacketSocket", LOG_LEVEL_ALL);
-      //LogComponentEnable ("Node", LOG_LEVEL_ALL);
+      LogComponentEnable ("PacketSocket", LOG_LEVEL_ALL);
+      LogComponentEnable ("Node", LOG_LEVEL_ALL);
       //LogComponentEnable ("NetDevice", LOG_LEVEL_ALL);
-      //LogComponentEnable ("Socket", LOG_LEVEL_ALL);
+      LogComponentEnable ("Socket", LOG_LEVEL_ALL);
       //LogComponentEnable ("TraciClient", LOG_LEVEL_ALL);
       LogComponentEnable ("ItsStation", LOG_LEVEL_ALL);
       LogComponentEnable ("VehicleItsStation", LOG_LEVEL_ALL);
@@ -194,7 +164,7 @@ int main (int argc, char *argv[])
     obus[i]->SetChannel(channel);
     obus[i]->SetPhyMode(phyMode);
     obus[i]->SetTxPowerDbm(txPower);
-    obus[i]->Configure();
+    obus[i]->ConfigureRadio();
 
   }
 
@@ -204,7 +174,7 @@ int main (int argc, char *argv[])
     rsus[i]->SetChannel(channel);
     rsus[i]->SetPhyMode(phyMode);
     rsus[i]->SetTxPowerDbm(txPower);
-    rsus[i]->Configure();
+    rsus[i]->ConfigureRadio();
   }
   
   // Set up the TraCI interface and start SUMO with the default parameters
@@ -222,15 +192,7 @@ int main (int argc, char *argv[])
   sumoClient->SetAttribute ("SumoSeed", IntegerValue (10));
   sumoClient->SetAttribute ("SumoWaitForSocket", TimeValue (Seconds (1.0)));
   sumoClient->SetAttribute ("SumoAdditionalCmdOptions", StringValue (sumo_additional_options));
-  
-  // Create RSU Apps
 
-  //camMonitorHelper CAM_MonitorHelper;
-  //CAM_MonitorHelper.SetAttribute ("Client", (PointerValue) sumoClient);
-  //CAM_MonitorHelper.SetAttribute ("RealTime", BooleanValue(false));
-
-  
-  
 
   std::cout << "A transmission power of " << txPower << " dBm  will be used." << std::endl;
 
@@ -239,9 +201,8 @@ int main (int argc, char *argv[])
   STARTUP_FCN setupNewWifiNode = [&] (std::string vehicleID) -> Ptr<Node>
     {
       unsigned long nodeID = std::stol(vehicleID.substr (3));
-      obus[nodeID]->Initialize(nodeID, sumoClient);
-      Ptr<Node> node = obus[nodeID]->GetNode();
-      std::cout << node << std::endl;
+      obus[nodeID-100]->Initialize(nodeID, sumoClient);
+      Ptr<Node> node = obus[nodeID-100]->GetNode();
       return node;
     };
 
@@ -254,7 +215,7 @@ int main (int argc, char *argv[])
       mob->SetPosition(Vector(-1000000.0+(rand()%25),3200000.0+(rand()%25),250.0));;
       
       // Clean up BS container
-      obus[nodeID]->m_bs_container->cleanup();
+      obus[nodeID-100]->m_bs_container->cleanup();
     };
 
     sumoClient->SumoSetup (setupNewWifiNode, shutdownWifiNode);
@@ -270,9 +231,6 @@ int main (int argc, char *argv[])
         sumoClient->AddStation(id, x, y, 0.0, rsuNode);
         unsigned long nodeID = std::stol(id.substr (4,4));
         rsus[i]->Initialize(nodeID, sumoClient);
-        //ApplicationContainer AppServer = CAM_MonitorHelper.Install (rsuNode);
-        //AppServer.Start (Seconds (0.0));
-        //AppServer.Stop (ns3::Seconds(simTime) - Seconds (0.1));
         ++i;
       }
     
