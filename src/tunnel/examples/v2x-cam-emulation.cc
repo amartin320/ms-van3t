@@ -71,7 +71,7 @@
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("V2Xcam-emu");
-
+bool realtime = false;
 
 int main (int argc, char *argv[])
 {
@@ -108,7 +108,7 @@ int main (int argc, char *argv[])
   std::string sumo_additional_options = "--fcd-output " + sumo_fcdoutput_file_name + " --fcd-output.geo";
 
   bool sumo_gui = true; // By default, enable the SUMO GUI
-
+  int first_vehicle_id;
   // Read the command line options
   CommandLine cmd (__FILE__);
 
@@ -117,6 +117,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
   cmd.AddValue ("tx-power", "OBUs transmission power [dBm]", txPower);
   cmd.AddValue ("sim-time", "Total duration of the simulation [s]", simTime);
+  cmd.AddValue ("real-time", "Enable real-time schedulling", realtime);
   cmd.AddValue ("sumo-folder","Position of sumo config files",sumo_folder);
   cmd.AddValue ("mob-trace", "Name of the mobility trace file", mob_trace);
   cmd.AddValue ("rsu-file", "Name of the RSU file", rsu_file);
@@ -184,6 +185,7 @@ int main (int argc, char *argv[])
       NS_FATAL_ERROR("Error: unable to parse the specified XML file: "<<path);
     }
   numberOfVehicles = XML_rou_count_vehicles(rou_xml_file);
+  first_vehicle_id = XML_rou_get_first_vehicle_id(rou_xml_file);
   std::cout << "Number of vehicles: " << numberOfVehicles << std::endl;
 
   /* Load RSU file*/
@@ -267,8 +269,8 @@ int main (int argc, char *argv[])
   STARTUP_FCN setupNewWifiNode = [&] (std::string vehicleID) -> Ptr<Node>
     {
       unsigned long nodeID = std::stol(vehicleID.substr (3));
-      obus[nodeID-100]->Initialize(nodeID, sumoClient, true);
-      Ptr<Node> node = obus[nodeID-100]->GetNode();
+      obus[nodeID-first_vehicle_id]->Initialize(nodeID, sumoClient, true);
+      Ptr<Node> node = obus[nodeID-first_vehicle_id]->GetNode();
       return node;
     };
 
@@ -281,7 +283,7 @@ int main (int argc, char *argv[])
       mob->SetPosition(Vector(-1000000.0+(rand()%25),3200000.0+(rand()%25),250.0));;
       
       // Clean up BS container
-      obus[nodeID-100]->m_bs_container->cleanup();
+      obus[nodeID-first_vehicle_id]->m_bs_container->cleanup();
     };
 
     sumoClient->SumoSetup (setupNewWifiNode, shutdownWifiNode);

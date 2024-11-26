@@ -49,18 +49,139 @@
 #include "ns3/packet-socket-helper.h"
 #include "ns3/gn-utils.h"
 #include "ns3/propagation-module.h"
+#include "ns3/cv2x_lte-v2x-helper.h"
+#include "ns3/config-store.h"
+#include "ns3/cv2x-module.h"
+
 
 
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("V2Xcam");
 
+bool realtime = false;
+double probResourceKeep = 0.0;
+bool adjacencyPscchPssch = true;
+bool partialSensing = false;
+uint32_t sizeSubchannel = 10;
+uint32_t numSubchannel = 3;
+uint32_t startRbSubchannel = 0;
+uint32_t pRsvp = 20;
+uint32_t t1 = 4;
+uint32_t t2 = 100;
+uint32_t slBandwidth;
+
+void configureLTEV2XSidelink(NetDeviceContainer ueLteDevs, uint32_t numberOfNodes) {
+
+  Ptr<cv2x_PointToPointEpcHelper>  epcHelper = CreateObject<cv2x_PointToPointEpcHelper> ();
+  Ptr<cv2x_LteHelper> lteHelper = CreateObject<cv2x_LteHelper> ();
+  lteHelper->SetEpcHelper (epcHelper);
+
+  // Disable eNBs for out-of-coverage modelling
+  lteHelper->DisableNewEnbPhy();
+
+  /* V2X */
+  Ptr<cv2x_LteV2xHelper> lteV2xHelper = CreateObject<cv2x_LteV2xHelper> ();
+  lteV2xHelper->SetLteHelper (lteHelper);
+
+  lteHelper->SetAttribute("UseSidelink", BooleanValue (true));
+
+   /* Create sidelink groups */
+  std::vector<NetDeviceContainer> txGroups;
+  txGroups = lteV2xHelper->AssociateForV2xBroadcast(ueLteDevs, numberOfNodes);
+
+  /* Compute average number of receivers associated per transmitter and vice versa */
+  std::map<uint32_t, uint32_t> txPerUeMap;
+  std::map<uint32_t, uint32_t> groupsPerUe;
+  std::vector<NetDeviceContainer>::iterator gIt;
+  for(gIt=txGroups.begin(); gIt != txGroups.end(); gIt++)
+      {
+          uint32_t numDevs = gIt->GetN();
+
+          uint32_t nId;
+
+          for(uint32_t i=1; i< numDevs; i++)
+              {
+                  nId = gIt->Get(i)->GetNode()->GetId();
+                  txPerUeMap[nId]++;
+              }
+      }
+
+  std::map<uint32_t, uint32_t>::iterator mIt;
+  for(mIt=txPerUeMap.begin(); mIt != txPerUeMap.end(); mIt++)
+      {
+          groupsPerUe [mIt->second]++;
+      }
+
+  std::vector<uint32_t> groupL2Addresses;
+  uint32_t groupL2Address = 0x00;
+  std::vector<Ipv4Address> ipAddresses;
+  Ipv4AddressGenerator::Init(Ipv4Address ("225.0.0.0"), Ipv4Mask ("255.0.0.0"));
+  Ipv4Address clientRespondersAddress = Ipv4AddressGenerator::NextAddress (Ipv4Mask ("255.0.0.0"));
+  NetDeviceContainer activeTxUes;
+
+
+  for(gIt=txGroups.begin(); gIt != txGroups.end(); gIt++)
+      {
+          /* Create Sidelink bearers */
+          NetDeviceContainer txUe ((*gIt).Get(0));
+          activeTxUes.Add(txUe);
+          NetDeviceContainer rxUes = lteV2xHelper->RemoveNetDevice ((*gIt), txUe.Get (0));
+          Ptr<cv2x_LteSlTft> tft = Create<cv2x_LteSlTft> (cv2x_LteSlTft::TRANSMIT, clientRespondersAddress, groupL2Address);
+          lteV2xHelper->ActivateSidelinkBearer (Seconds(0.0), txUe, tft);
+          tft = Create<cv2x_LteSlTft> (cv2x_LteSlTft::RECEIVE, clientRespondersAddress, groupL2Address);
+          lteV2xHelper->ActivateSidelinkBearer (Seconds(0.0), rxUes, tft);
+
+          /* store and increment addresses */
+          groupL2Addresses.push_back (groupL2Address);
+          ipAddresses.push_back (clientRespondersAddress);
+          groupL2Address++;
+          clientRespondersAddress = Ipv4AddressGenerator::NextAddress (Ipv4Mask ("255.0.0.0"));
+      }
+
+  /* Creating sidelink configuration */
+  Ptr<cv2x_LteUeRrcSl> ueSidelinkConfiguration = CreateObject<cv2x_LteUeRrcSl>();
+  ueSidelinkConfiguration->SetSlEnabled(true);
+  ueSidelinkConfiguration->SetV2xEnabled(true);
+
+  cv2x_LteRrcSap::SlV2xPreconfiguration preconfiguration;
+  preconfiguration.v2xPreconfigFreqList.freq[0].v2xCommPreconfigGeneral.carrierFreq = 54890;
+  preconfiguration.v2xPreconfigFreqList.freq[0].v2xCommPreconfigGeneral.slBandwidth = slBandwidth;
+
+  preconfiguration.v2xPreconfigFreqList.freq[0].v2xCommTxPoolList.nbPools = 1;
+  preconfiguration.v2xPreconfigFreqList.freq[0].v2xCommRxPoolList.nbPools = 1;
+
+  cv2x_SlV2xPreconfigPoolFactory pFactory;
+  if (adjacencyPscchPssch)
+    {
+        slBandwidth = sizeSubchannel * numSubchannel;
+    }
+    else
+    {
+        slBandwidth = (sizeSubchannel+2) * numSubchannel;
+    }
+  pFactory.SetHaveUeSelectedResourceConfig (true);
+  pFactory.SetSlSubframe (std::bitset<20> (0xFFFFF));
+  pFactory.SetAdjacencyPscchPssch (adjacencyPscchPssch);
+  pFactory.SetSizeSubchannel (sizeSubchannel);
+  pFactory.SetNumSubchannel (numSubchannel);
+  pFactory.SetStartRbSubchannel (startRbSubchannel);
+  pFactory.SetStartRbPscchPool (0);
+  pFactory.SetDataTxP0 (-4);
+  pFactory.SetDataTxAlpha (0.9);
+
+  preconfiguration.v2xPreconfigFreqList.freq[0].v2xCommTxPoolList.pools[0] = pFactory.CreatePool ();
+  preconfiguration.v2xPreconfigFreqList.freq[0].v2xCommRxPoolList.pools[0] = pFactory.CreatePool ();
+  ueSidelinkConfiguration->SetSlV2xPreconfiguration (preconfiguration);
+
+  lteHelper->InstallSidelinkV2xConfiguration (ueLteDevs, ueSidelinkConfiguration);
+}
 
 int main (int argc, char *argv[])
 {
 
 
-  std::string phyMode ("OfdmRate6MbpsBW10MHz"); // Default IEEE 802.11p data rate
+  std::string v2x_technology ("LTE-V2X"); // Default IEEE 802.11p data rate
   bool verbose = false; // Set to true to get a lot of verbose output from the IEEE 802.11p PHY model (leave this to false)
   int numberOfVehicles; // Total number of vehicles, automatically filled in by reading the XML file
   int numberOfRSUs; // Total number of vehicles, automatically filled in by reading the XML file
@@ -78,16 +199,19 @@ int main (int argc, char *argv[])
 
   std::string sumo_additional_options = "--fcd-output " + sumo_fcdoutput_file_name + " --fcd-output.geo";
 
-  bool sumo_gui = true; // By default, enable the SUMO GUI
+  int first_vehicle_id;
 
+  bool sumo_gui = true; // By default, enable the SUMO GUI
+  
   // Read the command line options
   CommandLine cmd (__FILE__);
 
   // Syntax to add new options: cmd.addValue (<option>,<brief description>,<destination variable>)
-  cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
   cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
   cmd.AddValue ("tx-power", "OBUs transmission power [dBm]", txPower);
+  cmd.AddValue ("v2x-technology", "V2X technology to use", v2x_technology);
   cmd.AddValue ("sim-time", "Total duration of the simulation [s]", simTime);
+  cmd.AddValue ("real-time", "Enable real-time schedulling", realtime);
   cmd.AddValue ("sumo-folder","Position of sumo config files",sumo_folder);
   cmd.AddValue ("mob-trace", "Name of the mobility trace file", mob_trace);
   cmd.AddValue ("rsu-file", "Name of the RSU file", rsu_file);
@@ -103,22 +227,27 @@ int main (int argc, char *argv[])
       LogComponentEnable ("V2Xcam", LOG_LEVEL_ALL);
       LogComponentEnable ("CABasicService", LOG_LEVEL_ALL);
       LogComponentEnable ("DENBasicService", LOG_LEVEL_ALL);
-      LogComponentEnable ("GeoNet", LOG_LEVEL_ALL);
-      LogComponentEnable ("btp", LOG_LEVEL_ALL);
-      LogComponentEnable ("TraceHelper", LOG_LEVEL_ALL);
-      LogComponentEnable ("PacketSocket", LOG_LEVEL_ALL);
-      LogComponentEnable ("Node", LOG_LEVEL_ALL);
+      //LogComponentEnable ("GeoNet", LOG_LEVEL_ALL);
+      //LogComponentEnable ("btp", LOG_LEVEL_ALL);
+      //LogComponentEnable ("TraceHelper", LOG_LEVEL_ALL);
+      //LogComponentEnable ("PacketSocket", LOG_LEVEL_ALL);
+      //LogComponentEnable ("Node", LOG_LEVEL_ALL);
       //LogComponentEnable ("NetDevice", LOG_LEVEL_ALL);
-      LogComponentEnable ("Socket", LOG_LEVEL_ALL);
+      //LogComponentEnable ("Socket", LOG_LEVEL_ALL);
       //LogComponentEnable ("TraciClient", LOG_LEVEL_ALL);
       LogComponentEnable ("ItsStation", LOG_LEVEL_ALL);
       LogComponentEnable ("VehicleItsStation", LOG_LEVEL_ALL);
       LogComponentEnable ("RoadsideItsStation", LOG_LEVEL_ALL);
-      LogComponentEnable ("camMonitor", LOG_LEVEL_ALL);
-      LogComponentEnable ("YansWifiChannel", LOG_LEVEL_ALL);
+      //LogComponentEnable ("YansWifiChannel", LOG_LEVEL_ALL);
       
 
     }
+
+  if (realtime) {
+    // Enable real-time scheduler
+    GlobalValue::Bind ("SimulatorImplementationType", StringValue ("ns3::RealtimeSimulatorImpl"));
+    GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
+  }
 
   /* Load the .rou.xml file (SUMO map and scenario) */
   xmlInitParser();
@@ -129,7 +258,10 @@ int main (int argc, char *argv[])
       NS_FATAL_ERROR("Error: unable to parse the specified XML file: "<<path);
     }
   numberOfVehicles = XML_rou_count_vehicles(rou_xml_file);
+  first_vehicle_id = XML_rou_get_first_vehicle_id(rou_xml_file);
+
   std::cout << "Number of vehicles: " << numberOfVehicles << std::endl;
+  std::cout << "First vehicle ID is: " << first_vehicle_id << std::endl;
 
   /* Load RSU file*/
   std::string rsu_path = sumo_folder + rsu_file;
@@ -159,23 +291,37 @@ int main (int argc, char *argv[])
   YansWifiPhyHelper wifiPhy;
 
   // Configure vehicle nodes
+  NetDeviceContainer vehicleNetDevices;
+  InternetStackHelper internet;
+  Ipv4StaticRoutingHelper ipv4RoutingHelper;
+
   for (int i = 0; i<numberOfVehicles; i++) {
-    obus[i] = CreateObject<VehicleItsStation>("802.11p");
+    obus[i] = CreateObject<VehicleItsStation>(v2x_technology);
     obus[i]->SetChannel(channel);
-    obus[i]->SetPhyMode(phyMode);
     obus[i]->SetTxPowerDbm(txPower);
-    obus[i]->ConfigureRadio();
+    vehicleNetDevices.Add(obus[i]->ConfigureRadio());
+    /* Install the IP stack on the UE */
+    
+    internet.Install (obus[i]->GetNode());
+    
 
   }
 
   // Configure RSU nodes 
+  NetDeviceContainer rsuNetDevices;
   for (int i = 0; i<numberOfRSUs; i++) {
-    rsus[i] = CreateObject<RoadsideItsStation>("802.11p");
+    rsus[i] = CreateObject<RoadsideItsStation>(v2x_technology);
     rsus[i]->SetChannel(channel);
-    rsus[i]->SetPhyMode(phyMode);
     rsus[i]->SetTxPowerDbm(txPower);
-    rsus[i]->ConfigureRadio();
+    rsuNetDevices.Add(rsus[i]->ConfigureRadio());
   }
+
+  // Technology-specific global configs
+  if(v2x_technology == "LTE-V2X") {
+    configureLTEV2XSidelink(vehicleNetDevices, numberOfVehicles);
+  }
+
+  
   
   // Set up the TraCI interface and start SUMO with the default parameters
   // The simulation time step can be tuned by changing "SynchInterval"
@@ -193,18 +339,39 @@ int main (int argc, char *argv[])
   sumoClient->SetAttribute ("SumoWaitForSocket", TimeValue (Seconds (1.0)));
   sumoClient->SetAttribute ("SumoAdditionalCmdOptions", StringValue (sumo_additional_options));
 
-
+  
   std::cout << "A transmission power of " << txPower << " dBm  will be used." << std::endl;
 
   std::cout << "Starting simulation... " << std::endl;
 
   STARTUP_FCN setupNewWifiNode = [&] (std::string vehicleID) -> Ptr<Node>
     {
+      
       unsigned long nodeID = std::stol(vehicleID.substr (3));
-      obus[nodeID-100]->Initialize(nodeID, sumoClient);
-      Ptr<Node> node = obus[nodeID-100]->GetNode();
+      obus[nodeID-first_vehicle_id]->Initialize(nodeID, sumoClient, realtime);
+      Ptr<Node> node = obus[nodeID-first_vehicle_id]->GetNode();
       return node;
     };
+
+  
+
+  STARTUP_FCN setupNewLTEV2XNode = [&] (std::string vehicleID) -> Ptr<Node>
+    {
+      unsigned long nodeID = std::stol(vehicleID.substr (3));
+
+      /* Assign IP address to UE */
+      //Ipv4InterfaceContainer ueIpIface;
+      //ueIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (m_netDevice));
+      //Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting (m_node->GetObject<Ipv4> ());
+      //ueStaticRouting->SetDefaultRoute (epcHelper->GetUeDefaultGatewayAddress (), 1);
+      //NS_LOG_INFO("Node "<< m_node->GetId () << " has been assigned an IP address: " << m_node->GetObject<Ipv4> ()->GetAddress(1,0).GetLocal());
+
+      obus[nodeID-first_vehicle_id]->Initialize(nodeID, sumoClient, realtime);
+      Ptr<Node> node = obus[nodeID-first_vehicle_id]->GetNode();
+      return node;
+    };
+
+    
 
   SHUTDOWN_FCN shutdownWifiNode = [&] (Ptr<Node> exNode, std::string vehicleID)
     {
@@ -215,7 +382,7 @@ int main (int argc, char *argv[])
       mob->SetPosition(Vector(-1000000.0+(rand()%25),3200000.0+(rand()%25),250.0));;
       
       // Clean up BS container
-      obus[nodeID-100]->m_bs_container->cleanup();
+      obus[nodeID-first_vehicle_id]->m_bs_container->cleanup();
     };
 
     sumoClient->SumoSetup (setupNewWifiNode, shutdownWifiNode);
