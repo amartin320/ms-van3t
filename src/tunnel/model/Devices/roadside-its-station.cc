@@ -143,7 +143,6 @@ namespace ns3
         // Create a new Basic Service Container object
         m_bs_container = CreateObject<BSContainer>(m_nodeID, StationType_roadSideUnit,sumoClient,m_realtime,m_sock); 
         m_bs_container -> setupContainerRSU(true,false,false,false);
-        
 
         // Set CA service
         Ptr<CABasicService> caService = m_bs_container->getCABasicService();

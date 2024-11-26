@@ -14,6 +14,11 @@
 #include "ns3/BSContainer.h"
 #include "ns3/network-module.h"
 #include "ns3/gn-utils.h"
+#include "ns3/cv2x-module.h"
+#include "ns3/cv2x_lte-v2x-helper.h"
+#include "ns3/internet-module.h"
+#include "ns3/config-store.h"
+
 
 
 namespace ns3
@@ -26,14 +31,15 @@ namespace ns3
         m_debug = false;
         m_node = CreateObject<Node>();
         m_v2x_technology = "802.11p";
-        m_phyMode = "OfdmRate6MbpsBW10MHz";
         m_txPowerDbm = 23.0;
+        SetDefault8011p();
     }
 
     ItsStation::~ItsStation ()
     {
         NS_LOG_FUNCTION(this);
     }
+
 
     ItsStation::ItsStation (std::string v2x_technology)
     {
@@ -43,14 +49,35 @@ namespace ns3
         m_v2x_technology = v2x_technology;
         if(v2x_technology == "802.11p")
         {
-            
-            m_phyMode = "OfdmRate6MbpsBW10MHz";
-            m_txPowerDbm = 23.0;
+            SetDefault8011p();
+        }
+        else if(v2x_technology == "LTE-V2X")
+        {
+            SetDefaultLTEV2X();
         }
     }
 
-    // Initialization
     void
+    ItsStation::SetDefault8011p() {
+        m_phyMode = "OfdmRate6MbpsBW10MHz";
+    }
+
+    void
+    ItsStation::SetDefaultLTEV2X() {
+        m_mcs = 20;
+        m_probResourceKeep = 0.0;
+        m_adjacencyPscchPssch = true;
+        m_partialSensing = false;
+        m_sizeSubchannel = 10;
+        m_numSubchannel = 3;
+        m_startRbSubchannel = 0;
+        m_pRsvp = 20;
+        m_t1 = 4;
+        m_t2 = 100;
+        m_slBandwidth;
+    }
+    // Initialization
+    NetDeviceContainer
     ItsStation::ConfigureRadio(void)
     {
         NS_LOG_FUNCTION(this);
@@ -60,7 +87,7 @@ namespace ns3
             Configure80211p(m_phyMode, m_txPowerDbm);
         }
         else if(m_v2x_technology == "LTE-V2X"){
-            // Initialize LTE-V2X
+            ConfigureLTEV2X(m_txPowerDbm, m_mcs);
         }
         else if (m_v2x_technology == "5G-V2X"){
             // Initialize 5G-V2X
@@ -69,6 +96,7 @@ namespace ns3
         // Install mobility in node
         MobilityHelper mobility;
         mobility.Install(m_node);
+        return m_netDevice;
     }
 
     void
@@ -100,9 +128,69 @@ namespace ns3
         if (m_debug == true) {
             wifi80211p.EnableLogComponents();
         }
+
         
 
         m_netDevice = wifi80211p.Install (wifiPhy, wifi80211pMac, m_node);
+        
+    }
+
+    void
+    ItsStation::ConfigureLTEV2X(double txPowerDbm, uint32_t mcs)
+    {
+        NS_LOG_FUNCTION(this);
+
+
+        Config::SetDefault ("ns3::cv2x_LteUePhy::TxPower", DoubleValue (txPowerDbm));
+        Config::SetDefault ("ns3::cv2x_LteUePhy::RsrpUeMeasThreshold", DoubleValue (-10.0));
+
+        /* Enable V2X communication on PHY layer */
+        Config::SetDefault ("ns3::cv2x_LteUePhy::EnableV2x", BooleanValue (true));
+
+        /* Disable power control: constant power*/
+        Config::SetDefault ("ns3::cv2x_LteUePowerControl::Pcmax", DoubleValue (txPowerDbm));
+        Config::SetDefault ("ns3::cv2x_LteUePowerControl::PsschTxPower", DoubleValue (txPowerDbm));
+        Config::SetDefault ("ns3::cv2x_LteUePowerControl::PscchTxPower", DoubleValue (txPowerDbm));
+
+        if (m_adjacencyPscchPssch)
+        {
+            m_slBandwidth = m_sizeSubchannel * m_numSubchannel;
+        }
+        else
+        {
+            m_slBandwidth = (m_sizeSubchannel+2) * m_numSubchannel;
+        }
+
+        /* Configure for UE selected */
+        Config::SetDefault ("ns3::cv2x_LteUeMac::UlBandwidth", UintegerValue (m_slBandwidth));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::EnableAdjacencyPscchPssch", BooleanValue (m_adjacencyPscchPssch));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::EnablePartialSensing", BooleanValue (m_partialSensing));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::SlGrantMcs", UintegerValue (m_mcs));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::SlSubchannelSize", UintegerValue (m_sizeSubchannel));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::SlSubchannelNum", UintegerValue (m_numSubchannel));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::SlStartRbSubchannel", UintegerValue (m_startRbSubchannel));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::SlPrsvp", UintegerValue (m_pRsvp));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::SlProbResourceKeep", DoubleValue (m_probResourceKeep));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::SelectionWindowT1", UintegerValue (m_t1));
+        Config::SetDefault ("ns3::cv2x_LteUeMac::SelectionWindowT2", UintegerValue (m_t2));
+
+        /*** 1. Create LTE objects   ***/
+        
+        Ptr<cv2x_PointToPointEpcHelper>  epcHelper = CreateObject<cv2x_PointToPointEpcHelper> ();
+        Ptr<cv2x_LteHelper> lteHelper = CreateObject<cv2x_LteHelper> ();
+        lteHelper->SetEpcHelper (epcHelper);
+
+        // Disable eNBs for out-of-coverage modelling
+        lteHelper->DisableNewEnbPhy();
+        std::cout << "here!" << std::endl;
+        /* V2X */
+        Ptr<cv2x_LteV2xHelper> lteV2xHelper = CreateObject<cv2x_LteV2xHelper> ();
+        lteV2xHelper->SetLteHelper (lteHelper);
+        
+
+        lteHelper->SetAttribute("UseSidelink", BooleanValue (true));
+        m_netDevice = lteHelper->InstallUeDevice (m_node);
+
         
     }
 

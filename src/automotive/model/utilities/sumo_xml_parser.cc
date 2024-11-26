@@ -49,6 +49,35 @@ namespace ns3
 
       return num_vehicles;
   }
+
+  int XML_rou_get_first_vehicle_id(xmlDocPtr doc)
+  {
+      xmlXPathContextPtr xpathCtx;
+      xmlXPathObjectPtr xpathObj;
+
+      // Create xPath to select all the 'vehicle' nodes in the rou.xml file
+      xpathCtx = xmlXPathNewContext(doc);
+      if(xpathCtx == NULL) {
+          return -1;
+      }
+
+      // Evaluate the xPath expression "//vehicle" to look for all the "<vehicle>" elements
+      xpathObj = xmlXPathEvalExpression((xmlChar *)"//vehicle",xpathCtx);
+      if(xpathObj == NULL || xpathObj->nodesetval==NULL) {
+          xmlXPathFreeContext(xpathCtx);
+          return -1;
+      }
+      
+      xmlNodePtr firstVehicleNode = xpathObj->nodesetval->nodeTab[0];
+      xmlChar* vehicleId = xmlGetProp(firstVehicleNode, (xmlChar*)"id");
+      int firstVehicleId = std::stoi((char*)(vehicleId + 3));
+      xmlFree(vehicleId);
+
+      xmlXPathFreeObject(xpathObj);
+      xmlXPathFreeContext(xpathCtx);
+
+      return firstVehicleId;
+  }
   int XML_rou_count_pedestrians(xmlDocPtr doc)
   {
       xmlXPathContextPtr xpathCtx;

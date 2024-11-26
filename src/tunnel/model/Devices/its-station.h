@@ -22,9 +22,13 @@ class ItsStation : public Object
 
     virtual ~ItsStation ();
 
-    void ConfigureRadio(void);
+    void SetDefault8011p();
+    void SetDefaultLTEV2X();
+    void SetDefaultNRV2X();
+
+    NetDeviceContainer ConfigureRadio(void);
     void Configure80211p(std::string phyMode, double txPowerDbm);
-    void ConfigureLTEV2X(void);
+    void ConfigureLTEV2X(double txPowerDbm, uint32_t mcs);
     void ConfigureNRV2X(void);
 
     void Initialize(unsigned long nodeID, Ptr<TraciClient> sumoClient);
@@ -59,6 +63,20 @@ class ItsStation : public Object
     // 802.11p parameters
     std::string m_phyMode; //!< 802.11p PHY mode
     Ptr<YansWifiChannel> m_channel_8011p;
+
+    // LTE-V2X parameters
+    uint32_t m_mcs; // Modulation and coding scheme
+    double m_probResourceKeep;          // Probability to select the previous resource again [0.0-0.8]
+    // bool harqEnabled = false;               // Retransmission enabled (harq not available yet)
+    bool m_adjacencyPscchPssch;        // Subchannelization scheme
+    bool m_partialSensing;            // Partial sensing enabled (actual only partialSensing is false supported)
+    uint16_t m_sizeSubchannel;           // Number of RBs per subchannel
+    uint16_t m_numSubchannel;             // Number of subchannels per subframe
+    uint16_t m_startRbSubchannel;         // Index of first RB corresponding to subchannelization
+    uint16_t m_pRsvp;                    // Resource reservation interval
+    uint16_t m_t1;                        // T1 value of selection window
+    uint16_t m_t2;                      // T2 value of selection window
+    uint16_t m_slBandwidth;                   // Sidelink bandwidth
 
     // ITS parameters
 

@@ -57,7 +57,7 @@ namespace ns3
     void changeSUMO_ID_prefix(std::string new_prefix) {m_sumo_vehid_prefix=new_prefix;}
 
     void setupContainer(bool CABasicService_enabled,bool DENBasicService_enabled,bool VRUBasicService_enabled, bool CPBasicService_enabled);
-
+    void setupContainerRSU(bool CABasicService_enabled,bool DENBasicService_enabled,bool VRUBasicService_enabled,bool CPMBasicService_enabled);
     // Function to setup a circular GeoArea for DENMs - it must be called at least once when sending/receiving DENMs
     // Then, it may be called as many times as desired to change the DENMs GeoArea
     // It should always be called after setupContainer(), otherwise it will generate an error
