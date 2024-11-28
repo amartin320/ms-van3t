@@ -99,7 +99,7 @@ void configureLTEV2XSidelink(NetDeviceContainer ueLteDevs, uint32_t numberOfNode
   std::map<uint32_t, uint32_t> txPerUeMap;
   std::map<uint32_t, uint32_t> groupsPerUe;
   std::vector<NetDeviceContainer>::iterator gIt;
-  
+
   for(gIt=txGroups.begin(); gIt != txGroups.end(); gIt++)
       {
           uint32_t numDevs = gIt->GetN();
@@ -113,7 +113,7 @@ void configureLTEV2XSidelink(NetDeviceContainer ueLteDevs, uint32_t numberOfNode
               }
       }
 
-  
+
   std::map<uint32_t, uint32_t>::iterator mIt;
   for(mIt=txPerUeMap.begin(); mIt != txPerUeMap.end(); mIt++)
       {
@@ -247,7 +247,7 @@ int main (int argc, char *argv[])
       LogComponentEnable ("RoadsideItsStation", LOG_LEVEL_ALL);
       LogComponentEnable ("YansWifiChannel", LOG_LEVEL_ALL);
       LogComponentEnable ("cv2x_LteHelper", LOG_LEVEL_ALL);
-      
+
 
     }
 
@@ -344,7 +344,7 @@ int main (int argc, char *argv[])
   if(v2x_technology == "LTE-V2X") {
     configureLTEV2XSidelink(vehicleNetDevices, numberOfVehicles, lteHelper);
   }
-  
+
   
   // Set up the TraCI interface and start SUMO with the default parameters
   // The simulation time step can be tuned by changing "SynchInterval"

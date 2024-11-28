@@ -141,7 +141,7 @@ namespace ns3
         NS_LOG_FUNCTION(this);
         m_netDevice = m_lteHelper->InstallUeDevice (m_node);
 
-        
+
     }
 
     // Setters

@@ -39,7 +39,7 @@ class ItsStation : public Object
     void SetPhyMode (std::string phyMode);
     void SetTxPowerDbm (double txPowerDbm);
     void SetLTEHelper (Ptr<cv2x_LteHelper> lteHelper);
-    
+
     Ptr<Node> GetNode(void);
     Ptr<Channel> GetChannel (void);
     std::string GetV2XTechnology (void) const;
@@ -68,6 +68,7 @@ class ItsStation : public Object
 
     // LTE-V2X parameters
     Ptr<cv2x_LteHelper> m_lteHelper;
+
     uint32_t m_mcs; // Modulation and coding scheme
     double m_probResourceKeep;          // Probability to select the previous resource again [0.0-0.8]
     // bool harqEnabled = false;               // Retransmission enabled (harq not available yet)
