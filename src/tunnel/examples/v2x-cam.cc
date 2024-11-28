@@ -71,11 +71,8 @@ uint32_t t1 = 4;
 uint32_t t2 = 100;
 uint32_t slBandwidth;
 
-void configureLTEV2XSidelink(NetDeviceContainer ueLteDevs, uint32_t numberOfNodes) {
+void configureLTEV2XSidelink(NetDeviceContainer ueLteDevs, uint32_t numberOfNodes, Ptr<cv2x_LteHelper> lteHelper) {
 
-  Ptr<cv2x_PointToPointEpcHelper>  epcHelper = CreateObject<cv2x_PointToPointEpcHelper> ();
-  Ptr<cv2x_LteHelper> lteHelper = CreateObject<cv2x_LteHelper> ();
-  lteHelper->SetEpcHelper (epcHelper);
 
   // Disable eNBs for out-of-coverage modelling
   lteHelper->DisableNewEnbPhy();
@@ -84,16 +81,25 @@ void configureLTEV2XSidelink(NetDeviceContainer ueLteDevs, uint32_t numberOfNode
   Ptr<cv2x_LteV2xHelper> lteV2xHelper = CreateObject<cv2x_LteV2xHelper> ();
   lteV2xHelper->SetLteHelper (lteHelper);
 
-  lteHelper->SetAttribute("UseSidelink", BooleanValue (true));
+  /* Configure eNBs' antenna parameters before deploying them. */
+  lteHelper->SetEnbAntennaModelType ("ns3::cv2x_NistParabolic3dAntennaModel");
+  lteHelper->SetAttribute ("UseSameUlDlPropagationCondition", BooleanValue(true));
+  Config::SetDefault ("ns3::cv2x_LteEnbNetDevice::UlEarfcn", StringValue ("54990")); // EARFCN 54990 -> 5855-5890-5925 MHz
+  lteHelper->SetAttribute ("PathlossModel", StringValue ("ns3::cv2x_CniUrbanmicrocellPropagationLossModel"));
+  NS_LOG_INFO("Antenna parameters set. Current EARFCN: 54990, current frequency: 5.89 GHz");
 
+  lteHelper->SetAttribute("UseSidelink", BooleanValue (true));
+  
    /* Create sidelink groups */
   std::vector<NetDeviceContainer> txGroups;
+  
   txGroups = lteV2xHelper->AssociateForV2xBroadcast(ueLteDevs, numberOfNodes);
 
   /* Compute average number of receivers associated per transmitter and vice versa */
   std::map<uint32_t, uint32_t> txPerUeMap;
   std::map<uint32_t, uint32_t> groupsPerUe;
   std::vector<NetDeviceContainer>::iterator gIt;
+  
   for(gIt=txGroups.begin(); gIt != txGroups.end(); gIt++)
       {
           uint32_t numDevs = gIt->GetN();
@@ -107,6 +113,7 @@ void configureLTEV2XSidelink(NetDeviceContainer ueLteDevs, uint32_t numberOfNode
               }
       }
 
+  
   std::map<uint32_t, uint32_t>::iterator mIt;
   for(mIt=txPerUeMap.begin(); mIt != txPerUeMap.end(); mIt++)
       {
@@ -227,18 +234,19 @@ int main (int argc, char *argv[])
       LogComponentEnable ("V2Xcam", LOG_LEVEL_ALL);
       LogComponentEnable ("CABasicService", LOG_LEVEL_ALL);
       LogComponentEnable ("DENBasicService", LOG_LEVEL_ALL);
-      //LogComponentEnable ("GeoNet", LOG_LEVEL_ALL);
-      //LogComponentEnable ("btp", LOG_LEVEL_ALL);
-      //LogComponentEnable ("TraceHelper", LOG_LEVEL_ALL);
-      //LogComponentEnable ("PacketSocket", LOG_LEVEL_ALL);
-      //LogComponentEnable ("Node", LOG_LEVEL_ALL);
-      //LogComponentEnable ("NetDevice", LOG_LEVEL_ALL);
-      //LogComponentEnable ("Socket", LOG_LEVEL_ALL);
-      //LogComponentEnable ("TraciClient", LOG_LEVEL_ALL);
+      LogComponentEnable ("GeoNet", LOG_LEVEL_ALL);
+      LogComponentEnable ("btp", LOG_LEVEL_ALL);
+      LogComponentEnable ("TraceHelper", LOG_LEVEL_ALL);
+      LogComponentEnable ("PacketSocket", LOG_LEVEL_ALL);
+      LogComponentEnable ("Node", LOG_LEVEL_ALL);
+      LogComponentEnable ("NetDevice", LOG_LEVEL_ALL);
+      LogComponentEnable ("Socket", LOG_LEVEL_ALL);
+      LogComponentEnable ("TraciClient", LOG_LEVEL_ALL);
       LogComponentEnable ("ItsStation", LOG_LEVEL_ALL);
       LogComponentEnable ("VehicleItsStation", LOG_LEVEL_ALL);
       LogComponentEnable ("RoadsideItsStation", LOG_LEVEL_ALL);
-      //LogComponentEnable ("YansWifiChannel", LOG_LEVEL_ALL);
+      LogComponentEnable ("YansWifiChannel", LOG_LEVEL_ALL);
+      LogComponentEnable ("cv2x_LteHelper", LOG_LEVEL_ALL);
       
 
     }
@@ -295,16 +303,27 @@ int main (int argc, char *argv[])
   InternetStackHelper internet;
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
 
+  Ptr<cv2x_LteHelper> lteHelper;
+
+  if(v2x_technology == "LTE-V2X") {
+    Ptr<cv2x_PointToPointEpcHelper>  epcHelper = CreateObject<cv2x_PointToPointEpcHelper> ();
+    lteHelper = CreateObject<cv2x_LteHelper> ();
+    lteHelper->SetEpcHelper (epcHelper);
+  }
+
+  // Configure OBU nodes
   for (int i = 0; i<numberOfVehicles; i++) {
     obus[i] = CreateObject<VehicleItsStation>(v2x_technology);
     obus[i]->SetChannel(channel);
     obus[i]->SetTxPowerDbm(txPower);
+    if(v2x_technology == "LTE-V2X") {
+      obus[i]->SetLTEHelper(lteHelper);
+      lteHelper->InstallUeDevice (obus[i]->GetNode());
+      
+    }
     vehicleNetDevices.Add(obus[i]->ConfigureRadio());
     /* Install the IP stack on the UE */
-    
     internet.Install (obus[i]->GetNode());
-    
-
   }
 
   // Configure RSU nodes 
@@ -313,14 +332,18 @@ int main (int argc, char *argv[])
     rsus[i] = CreateObject<RoadsideItsStation>(v2x_technology);
     rsus[i]->SetChannel(channel);
     rsus[i]->SetTxPowerDbm(txPower);
+    if(v2x_technology == "LTE-V2X") {
+      rsus[i]->SetLTEHelper(lteHelper);
+      lteHelper->InstallUeDevice (rsus[i]->GetNode());
+      
+    }
     rsuNetDevices.Add(rsus[i]->ConfigureRadio());
   }
 
   // Technology-specific global configs
   if(v2x_technology == "LTE-V2X") {
-    configureLTEV2XSidelink(vehicleNetDevices, numberOfVehicles);
+    configureLTEV2XSidelink(vehicleNetDevices, numberOfVehicles, lteHelper);
   }
-
   
   
   // Set up the TraCI interface and start SUMO with the default parameters
