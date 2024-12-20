@@ -78,7 +78,7 @@ int main (int argc, char *argv[])
 
   // Emulation parameters
   // Physical interface 
-  std::string interface ("enp3s0");
+  std::string interface ("enx50a0300007da");
   // UDP parameters
   std::string udpServerIP = "192.168.1.254";
   std::string gwstr = "192.168.1.1";
@@ -89,11 +89,16 @@ int main (int argc, char *argv[])
   Ipv4Address destAddr;
   Ipv4AddressHelper ipv4helper;
 
+  // V2X parameters
+  std::string v2x_tech = "802.11p"; // V2X technology to use (default: 802.11p)
+  int txPower = 23.0; // IEEE 802.11p transmission power in dBm (default: 23 dBm)
   std::string phyMode ("OfdmRate6MbpsBW10MHz"); // Default IEEE 802.11p data rate
-  bool verbose = false; // Set to true to get a lot of verbose output from the IEEE 802.11p PHY model (leave this to false)
+
   int numberOfVehicles; // Total number of vehicles, automatically filled in by reading the XML file
   int numberOfRSUs; // Total number of vehicles, automatically filled in by reading the XML file
-  int txPower = 23.0; // IEEE 802.11p transmission power in dBm (default: 23 dBm)
+  
+  bool verbose = false; // Set to true to get a lot of verbose output from the IEEE 802.11p PHY model (leave this to false)
+
   xmlDocPtr rou_xml_file;
   double simTime = 100.0; // Total simulation time (default: 100 seconds)
   float penetration_rate = 1.0; // Penetration rate of vehicles equipped with OBUs (default: 1.0 -- i.e, all vehicles)
@@ -115,6 +120,7 @@ int main (int argc, char *argv[])
   // Syntax to add new options: cmd.addValue (<option>,<brief description>,<destination variable>)
   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
   cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
+  cmd.AddValue ("v2x-tech", "V2X technology to use (802.11p)", v2x_tech);
   cmd.AddValue ("tx-power", "OBUs transmission power [dBm]", txPower);
   cmd.AddValue ("sim-time", "Total duration of the simulation [s]", simTime);
   cmd.AddValue ("real-time", "Enable real-time schedulling", realtime);
@@ -157,6 +163,8 @@ int main (int argc, char *argv[])
       //LogComponentEnable ("FdNetDevice", LOG_LEVEL_ALL);
 
     }
+
+    
 
   // Enable real-time scheduler
   GlobalValue::Bind ("SimulatorImplementationType", StringValue ("ns3::RealtimeSimulatorImpl"));
@@ -259,7 +267,7 @@ int main (int argc, char *argv[])
   sumoClient->SetAttribute ("SumoSeed", IntegerValue (10));
   sumoClient->SetAttribute ("SumoWaitForSocket", TimeValue (Seconds (1.0)));
   sumoClient->SetAttribute ("SumoAdditionalCmdOptions", StringValue (sumo_additional_options));
-
+  sumoClient->SetAttribute ("MaxVehicles", IntegerValue (numberOfVehicles));
   EmuFdNetDeviceHelper emuDev;
   emuDev.SetDeviceName (interface);
   emuDev.SetAttribute ("EncapsulationMode", StringValue ("Dix"));
@@ -318,9 +326,20 @@ int main (int argc, char *argv[])
         uint32_t iface = ipv4->AddInterface (dev);
         ipv4ic = ipv4helper.Assign (fdnetContainer);
         Ipv4InterfaceAddress address = Ipv4InterfaceAddress (ipv4ic.GetAddress (0,0), netmask.c_str());
+
         ipv4->AddAddress (iface, address);
         ipv4->SetMetric (iface, 1);
         ipv4->SetUp (iface);
+
+        // Get Ipv4Interface object
+        Ptr<Ipv4Interface> ifacePtr = ipv4->GetObject<Ipv4L3Protocol> ()->GetInterface (iface);
+        
+        Ptr<ArpCache> arp = CreateObject<ArpCache>();
+        arp->SetAliveTimeout(Seconds(3600 * 24 * 365));
+        ArpCache::Entry * entry = arp->Add(Ipv4Address (udpServerIP.c_str()));
+        entry->SetMacAddress(Mac48Address("30:23:03:06:31:87"));
+        entry->MarkPermanent();
+        ifacePtr->SetArpCache(arp);
 
         Ptr<Ipv4StaticRouting> staticRouting = ipv4RoutingHelper.GetStaticRouting (ipv4);
         staticRouting->SetDefaultRoute (gateway, iface);
@@ -339,8 +358,11 @@ int main (int argc, char *argv[])
 
     std::cout << "Starting simulation... " << std::endl;
     // Start simulation
+    if (simTime > 0.0)
+    {
+      Simulator::Stop (Seconds(simTime));
+    }
 
-    Simulator::Stop (Seconds(simTime));
     Simulator::Run ();
 
     std::cout << "Run terminated..." << std::endl;
