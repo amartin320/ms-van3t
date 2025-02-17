@@ -255,7 +255,6 @@ Set(source_files
     model/ASN1/full-v1-v2/ContractValidity.c
     model/ASN1/full-v1-v2/ContractVehicle.c
     model/ASN1/full-v1-v2/CoopAwarenessV1.c
-    model/ASN1/full-v1-v2/CooperationCost.c
     model/ASN1/full-v1-v2/CoordinateConfidence.c
     model/ASN1/full-v1-v2/CopValue.c
     model/ASN1/full-v1-v2/CopyRq.c
@@ -488,11 +487,6 @@ Set(source_files
     model/ASN1/full-v1-v2/InterferenceManagementZoneDefinition.c
     model/ASN1/full-v1-v2/InterferenceManagementZoneType.c
     model/ASN1/full-v1-v2/InterferenceManagementZones.c
-    model/ASN1/full-v1-v2/IntermediatePoint.c
-    model/ASN1/full-v1-v2/IntermediatePointIntersection.c
-    model/ASN1/full-v1-v2/IntermediatePointLane.c
-    model/ASN1/full-v1-v2/IntermediatePointOffroad.c
-    model/ASN1/full-v1-v2/IntermediatePointReference.c
     model/ASN1/full-v1-v2/InternationalSign-applicablePeriod.c
     model/ASN1/full-v1-v2/InternationalSign-applicableVehicleDimensions.c
     model/ASN1/full-v1-v2/InternationalSign-destinationInformation.c
@@ -533,7 +527,6 @@ Set(source_files
     model/ASN1/full-v1-v2/IviStructure.c
     model/ASN1/full-v1-v2/IviType.c
     model/ASN1/full-v1-v2/LPN.c
-    model/ASN1/full-v1-v2/Lane.c
     model/ASN1/full-v1-v2/LaneAttributes-Barrier.c
     model/ASN1/full-v1-v2/LaneAttributes-Bike.c
     model/ASN1/full-v1-v2/LaneAttributes-Crosswalk.c
@@ -547,7 +540,6 @@ Set(source_files
     model/ASN1/full-v1-v2/LaneCharacteristics.c
     model/ASN1/full-v1-v2/LaneConfiguration.c
     model/ASN1/full-v1-v2/LaneConnectionID.c
-    model/ASN1/full-v1-v2/LaneCount.c
     model/ASN1/full-v1-v2/LaneDataAttribute.c
     model/ASN1/full-v1-v2/LaneDataAttributeList.c
     model/ASN1/full-v1-v2/LaneDelimitation.c
@@ -600,14 +592,10 @@ Set(source_files
     model/ASN1/full-v1-v2/LowerTriangularPositiveSemidefiniteMatrix.c
     model/ASN1/full-v1-v2/LowerTriangularPositiveSemidefiniteMatrixColumns.c
     model/ASN1/full-v1-v2/MAPEM.c
-    model/ASN1/full-v1-v2/MCM.c
     model/ASN1/full-v1-v2/ManagementContainer.c
     model/ASN1/full-v1-v2/ManagementContainerCPM.c
     model/ASN1/full-v1-v2/ManagementContainerV1.c
     model/ASN1/full-v1-v2/ManeuverAssistList.c
-    model/ASN1/full-v1-v2/Manoeuvre.c
-    model/ASN1/full-v1-v2/ManoeuvreAdviceContainer.c
-    model/ASN1/full-v1-v2/ManoeuvreCoordination.c
     model/ASN1/full-v1-v2/MapData-addGrpC.c
     model/ASN1/full-v1-v2/MapData.c
     model/ASN1/full-v1-v2/MapLocationContainer.c
@@ -619,12 +607,6 @@ Set(source_files
     model/ASN1/full-v1-v2/MatrixIncludedComponents.c
     model/ASN1/full-v1-v2/MaxLenghtOfPlatoon.c
     model/ASN1/full-v1-v2/MaxNoOfVehicles.c
-    model/ASN1/full-v1-v2/McmAutomationState.c
-    model/ASN1/full-v1-v2/McmCategory.c
-    model/ASN1/full-v1-v2/McmCategoryType.c
-    model/ASN1/full-v1-v2/McmContainer.c
-    model/ASN1/full-v1-v2/McmStartPoint.c
-    model/ASN1/full-v1-v2/McmTrajectory.c
     model/ASN1/full-v1-v2/MergeDivergeNodeAngle.c
     model/ASN1/full-v1-v2/MessageId.c
     model/ASN1/full-v1-v2/MessageRateHz.c
@@ -667,15 +649,6 @@ Set(source_files
     model/ASN1/full-v1-v2/NativeInteger_rfill.c
     model/ASN1/full-v1-v2/NativeInteger_uper.c
     model/ASN1/full-v1-v2/NativeInteger_xer.c
-    model/ASN1/full-v1-v2/NativeReal.c
-    model/ASN1/full-v1-v2/NativeReal_aper.c
-    model/ASN1/full-v1-v2/NativeReal_ber.c
-    model/ASN1/full-v1-v2/NativeReal_jer.c
-    model/ASN1/full-v1-v2/NativeReal_oer.c
-    model/ASN1/full-v1-v2/NativeReal_print.c
-    model/ASN1/full-v1-v2/NativeReal_rfill.c
-    model/ASN1/full-v1-v2/NativeReal_uper.c
-    model/ASN1/full-v1-v2/NativeReal_xer.c
     model/ASN1/full-v1-v2/Node-LLmD-64b.c
     model/ASN1/full-v1-v2/Node-XY-20b.c
     model/ASN1/full-v1-v2/Node-XY-22b.c
@@ -793,11 +766,6 @@ Set(source_files
     model/ASN1/full-v1-v2/PolyPointListV1.c
     model/ASN1/full-v1-v2/PolygonalLine.c
     model/ASN1/full-v1-v2/PolygonalShape.c
-    model/ASN1/full-v1-v2/Polynom.c
-    model/ASN1/full-v1-v2/PolynomCoefficient.c
-    model/ASN1/full-v1-v2/PolynomEndX.c
-    model/ASN1/full-v1-v2/PolynomStartX.c
-    model/ASN1/full-v1-v2/PolynomXOffset.c
     model/ASN1/full-v1-v2/PosCentMass.c
     model/ASN1/full-v1-v2/PosCentMassV1.c
     model/ASN1/full-v1-v2/PosConfidenceEllipse.c
@@ -850,14 +818,6 @@ Set(source_files
     model/ASN1/full-v1-v2/PublicTransportContainer.c
     model/ASN1/full-v1-v2/PublicTransportContainerV1.c
     model/ASN1/full-v1-v2/PurseBalance.c
-    model/ASN1/full-v1-v2/REAL.c
-    model/ASN1/full-v1-v2/REAL_aper.c
-    model/ASN1/full-v1-v2/REAL_jer.c
-    model/ASN1/full-v1-v2/REAL_oer.c
-    model/ASN1/full-v1-v2/REAL_print.c
-    model/ASN1/full-v1-v2/REAL_rfill.c
-    model/ASN1/full-v1-v2/REAL_uper.c
-    model/ASN1/full-v1-v2/REAL_xer.c
     model/ASN1/full-v1-v2/RSCUnit.c
     model/ASN1/full-v1-v2/RSCode.c
     model/ASN1/full-v1-v2/RSUContainerHighFrequency.c
@@ -877,7 +837,6 @@ Set(source_files
     model/ASN1/full-v1-v2/RangeV1.c
     model/ASN1/full-v1-v2/RccPart.c
     model/ASN1/full-v1-v2/RearOverhangV1.c
-    model/ASN1/full-v1-v2/Reason.c
     model/ASN1/full-v1-v2/ReceiptAuthenticator.c
     model/ASN1/full-v1-v2/ReceiptContract.c
     model/ASN1/full-v1-v2/ReceiptData.c
@@ -1081,7 +1040,6 @@ Set(source_files
     model/ASN1/full-v1-v2/TimeIntervalConfidence.c
     model/ASN1/full-v1-v2/TimeMark.c
     model/ASN1/full-v1-v2/TimeOfMeasurementV1.c
-    model/ASN1/full-v1-v2/TimeOfPos.c
     model/ASN1/full-v1-v2/TimeReference.c
     model/ASN1/full-v1-v2/TimestampIts.c
     model/ASN1/full-v1-v2/TimestampItsV1.c
@@ -1110,10 +1068,6 @@ Set(source_files
     model/ASN1/full-v1-v2/TrailerLicencePlateNumber.c
     model/ASN1/full-v1-v2/TrailerPresenceInformation.c
     model/ASN1/full-v1-v2/TrainCharacteristics.c
-    model/ASN1/full-v1-v2/Trajectory.c
-    model/ASN1/full-v1-v2/TrajectoryInterceptionConfidence.c
-    model/ASN1/full-v1-v2/TrajectoryInterceptionIndication.c
-    model/ASN1/full-v1-v2/TrajectoryInterceptionProbability.c
     model/ASN1/full-v1-v2/TransitVehicleOccupancy.c
     model/ASN1/full-v1-v2/TransitVehicleStatus.c
     model/ASN1/full-v1-v2/TransmissionAndSpeed.c
@@ -1165,7 +1119,6 @@ Set(source_files
     model/ASN1/full-v1-v2/VehicleLengthValue.c
     model/ASN1/full-v1-v2/VehicleLengthValueV1.c
     model/ASN1/full-v1-v2/VehicleLicencePlateNumber.c
-    model/ASN1/full-v1-v2/VehicleManoeuvreContainer.c
     model/ASN1/full-v1-v2/VehicleMass.c
     model/ASN1/full-v1-v2/VehicleMassV1.c
     model/ASN1/full-v1-v2/VehicleRole.c
@@ -1576,7 +1529,6 @@ model/ASN1/full-v1-v2/ContractSerialNumber.h
 model/ASN1/full-v1-v2/ContractValidity.h
 model/ASN1/full-v1-v2/ContractVehicle.h
 model/ASN1/full-v1-v2/CoopAwarenessV1.h
-model/ASN1/full-v1-v2/CooperationCost.h
 model/ASN1/full-v1-v2/CoordinateConfidence.h
 model/ASN1/full-v1-v2/CopValue.h
 model/ASN1/full-v1-v2/CopyRq.h
@@ -1797,11 +1749,6 @@ model/ASN1/full-v1-v2/InterferenceManagementZone.h
 model/ASN1/full-v1-v2/InterferenceManagementZoneDefinition.h
 model/ASN1/full-v1-v2/InterferenceManagementZoneType.h
 model/ASN1/full-v1-v2/InterferenceManagementZones.h
-model/ASN1/full-v1-v2/IntermediatePoint.h
-model/ASN1/full-v1-v2/IntermediatePointIntersection.h
-model/ASN1/full-v1-v2/IntermediatePointLane.h
-model/ASN1/full-v1-v2/IntermediatePointOffroad.h
-model/ASN1/full-v1-v2/IntermediatePointReference.h
 model/ASN1/full-v1-v2/InternationalSign-applicablePeriod.h
 model/ASN1/full-v1-v2/InternationalSign-applicableVehicleDimensions.h
 model/ASN1/full-v1-v2/InternationalSign-destinationInformation.h
@@ -1842,7 +1789,6 @@ model/ASN1/full-v1-v2/IviStatus.h
 model/ASN1/full-v1-v2/IviStructure.h
 model/ASN1/full-v1-v2/IviType.h
 model/ASN1/full-v1-v2/LPN.h
-model/ASN1/full-v1-v2/Lane.h
 model/ASN1/full-v1-v2/LaneAttributes-Barrier.h
 model/ASN1/full-v1-v2/LaneAttributes-Bike.h
 model/ASN1/full-v1-v2/LaneAttributes-Crosswalk.h
@@ -1856,7 +1802,6 @@ model/ASN1/full-v1-v2/LaneAttributes.h
 model/ASN1/full-v1-v2/LaneCharacteristics.h
 model/ASN1/full-v1-v2/LaneConfiguration.h
 model/ASN1/full-v1-v2/LaneConnectionID.h
-model/ASN1/full-v1-v2/LaneCount.h
 model/ASN1/full-v1-v2/LaneDataAttribute.h
 model/ASN1/full-v1-v2/LaneDataAttributeList.h
 model/ASN1/full-v1-v2/LaneDelimitation.h
@@ -1909,14 +1854,10 @@ model/ASN1/full-v1-v2/LowerTriangularPositiveSemidefiniteMatrices.h
 model/ASN1/full-v1-v2/LowerTriangularPositiveSemidefiniteMatrix.h
 model/ASN1/full-v1-v2/LowerTriangularPositiveSemidefiniteMatrixColumns.h
 model/ASN1/full-v1-v2/MAPEM.h
-model/ASN1/full-v1-v2/MCM.h
 model/ASN1/full-v1-v2/ManagementContainer.h
 model/ASN1/full-v1-v2/ManagementContainerCPM.h
 model/ASN1/full-v1-v2/ManagementContainerV1.h
 model/ASN1/full-v1-v2/ManeuverAssistList.h
-model/ASN1/full-v1-v2/Manoeuvre.h
-model/ASN1/full-v1-v2/ManoeuvreAdviceContainer.h
-model/ASN1/full-v1-v2/ManoeuvreCoordination.h
 model/ASN1/full-v1-v2/MapData-addGrpC.h
 model/ASN1/full-v1-v2/MapData.h
 model/ASN1/full-v1-v2/MapLocationContainer.h
@@ -1928,12 +1869,6 @@ model/ASN1/full-v1-v2/MaterialType.h
 model/ASN1/full-v1-v2/MatrixIncludedComponents.h
 model/ASN1/full-v1-v2/MaxLenghtOfPlatoon.h
 model/ASN1/full-v1-v2/MaxNoOfVehicles.h
-model/ASN1/full-v1-v2/McmAutomationState.h
-model/ASN1/full-v1-v2/McmCategory.h
-model/ASN1/full-v1-v2/McmCategoryType.h
-model/ASN1/full-v1-v2/McmContainer.h
-model/ASN1/full-v1-v2/McmStartPoint.h
-model/ASN1/full-v1-v2/McmTrajectory.h
 model/ASN1/full-v1-v2/MergeDivergeNodeAngle.h
 model/ASN1/full-v1-v2/MessageId.h
 model/ASN1/full-v1-v2/MessageRateHz.h
@@ -1955,7 +1890,6 @@ model/ASN1/full-v1-v2/MsgCount.h
 model/ASN1/full-v1-v2/NULL.h
 model/ASN1/full-v1-v2/NativeEnumerated.h
 model/ASN1/full-v1-v2/NativeInteger.h
-model/ASN1/full-v1-v2/NativeReal.h
 model/ASN1/full-v1-v2/Node-LLmD-64b.h
 model/ASN1/full-v1-v2/Node-XY-20b.h
 model/ASN1/full-v1-v2/Node-XY-22b.h
@@ -2055,11 +1989,6 @@ model/ASN1/full-v1-v2/PlatooningRules.h
 model/ASN1/full-v1-v2/PolyPointListV1.h
 model/ASN1/full-v1-v2/PolygonalLine.h
 model/ASN1/full-v1-v2/PolygonalShape.h
-model/ASN1/full-v1-v2/Polynom.h
-model/ASN1/full-v1-v2/PolynomCoefficient.h
-model/ASN1/full-v1-v2/PolynomEndX.h
-model/ASN1/full-v1-v2/PolynomStartX.h
-model/ASN1/full-v1-v2/PolynomXOffset.h
 model/ASN1/full-v1-v2/PosCentMass.h
 model/ASN1/full-v1-v2/PosCentMassV1.h
 model/ASN1/full-v1-v2/PosConfidenceEllipse.h
@@ -2112,7 +2041,6 @@ model/ASN1/full-v1-v2/PtvRequestType.h
 model/ASN1/full-v1-v2/PublicTransportContainer.h
 model/ASN1/full-v1-v2/PublicTransportContainerV1.h
 model/ASN1/full-v1-v2/PurseBalance.h
-model/ASN1/full-v1-v2/REAL.h
 model/ASN1/full-v1-v2/RSCUnit.h
 model/ASN1/full-v1-v2/RSCode.h
 model/ASN1/full-v1-v2/RSUContainerHighFrequency.h
@@ -2132,7 +2060,6 @@ model/ASN1/full-v1-v2/RailwayLevelCrossingSubCauseCode.h
 model/ASN1/full-v1-v2/RangeV1.h
 model/ASN1/full-v1-v2/RccPart.h
 model/ASN1/full-v1-v2/RearOverhangV1.h
-model/ASN1/full-v1-v2/Reason.h
 model/ASN1/full-v1-v2/ReceiptAuthenticator.h
 model/ASN1/full-v1-v2/ReceiptContract.h
 model/ASN1/full-v1-v2/ReceiptData.h
@@ -2336,7 +2263,6 @@ model/ASN1/full-v1-v2/TimeConfidence.h
 model/ASN1/full-v1-v2/TimeIntervalConfidence.h
 model/ASN1/full-v1-v2/TimeMark.h
 model/ASN1/full-v1-v2/TimeOfMeasurementV1.h
-model/ASN1/full-v1-v2/TimeOfPos.h
 model/ASN1/full-v1-v2/TimeReference.h
 model/ASN1/full-v1-v2/TimestampIts.h
 model/ASN1/full-v1-v2/TimestampItsV1.h
@@ -2365,10 +2291,6 @@ model/ASN1/full-v1-v2/TrailerDetails.h
 model/ASN1/full-v1-v2/TrailerLicencePlateNumber.h
 model/ASN1/full-v1-v2/TrailerPresenceInformation.h
 model/ASN1/full-v1-v2/TrainCharacteristics.h
-model/ASN1/full-v1-v2/Trajectory.h
-model/ASN1/full-v1-v2/TrajectoryInterceptionConfidence.h
-model/ASN1/full-v1-v2/TrajectoryInterceptionIndication.h
-model/ASN1/full-v1-v2/TrajectoryInterceptionProbability.h
 model/ASN1/full-v1-v2/TransitVehicleOccupancy.h
 model/ASN1/full-v1-v2/TransitVehicleStatus.h
 model/ASN1/full-v1-v2/TransmissionAndSpeed.h
@@ -2418,7 +2340,6 @@ model/ASN1/full-v1-v2/VehicleLengthV2.h
 model/ASN1/full-v1-v2/VehicleLengthValue.h
 model/ASN1/full-v1-v2/VehicleLengthValueV1.h
 model/ASN1/full-v1-v2/VehicleLicencePlateNumber.h
-model/ASN1/full-v1-v2/VehicleManoeuvreContainer.h
 model/ASN1/full-v1-v2/VehicleMass.h
 model/ASN1/full-v1-v2/VehicleMassV1.h
 model/ASN1/full-v1-v2/VehicleRole.h
@@ -2724,7 +2645,6 @@ model/ASN1/full-v1-v2/ContractSerialNumber.c
 model/ASN1/full-v1-v2/ContractValidity.c
 model/ASN1/full-v1-v2/ContractVehicle.c
 model/ASN1/full-v1-v2/CoopAwarenessV1.c
-model/ASN1/full-v1-v2/CooperationCost.c
 model/ASN1/full-v1-v2/CoordinateConfidence.c
 model/ASN1/full-v1-v2/CopValue.c
 model/ASN1/full-v1-v2/CopyRq.c
@@ -2957,11 +2877,6 @@ model/ASN1/full-v1-v2/InterferenceManagementZone.c
 model/ASN1/full-v1-v2/InterferenceManagementZoneDefinition.c
 model/ASN1/full-v1-v2/InterferenceManagementZoneType.c
 model/ASN1/full-v1-v2/InterferenceManagementZones.c
-model/ASN1/full-v1-v2/IntermediatePoint.c
-model/ASN1/full-v1-v2/IntermediatePointIntersection.c
-model/ASN1/full-v1-v2/IntermediatePointLane.c
-model/ASN1/full-v1-v2/IntermediatePointOffroad.c
-model/ASN1/full-v1-v2/IntermediatePointReference.c
 model/ASN1/full-v1-v2/InternationalSign-applicablePeriod.c
 model/ASN1/full-v1-v2/InternationalSign-applicableVehicleDimensions.c
 model/ASN1/full-v1-v2/InternationalSign-destinationInformation.c
@@ -3002,7 +2917,6 @@ model/ASN1/full-v1-v2/IviStatus.c
 model/ASN1/full-v1-v2/IviStructure.c
 model/ASN1/full-v1-v2/IviType.c
 model/ASN1/full-v1-v2/LPN.c
-model/ASN1/full-v1-v2/Lane.c
 model/ASN1/full-v1-v2/LaneAttributes-Barrier.c
 model/ASN1/full-v1-v2/LaneAttributes-Bike.c
 model/ASN1/full-v1-v2/LaneAttributes-Crosswalk.c
@@ -3016,7 +2930,6 @@ model/ASN1/full-v1-v2/LaneAttributes.c
 model/ASN1/full-v1-v2/LaneCharacteristics.c
 model/ASN1/full-v1-v2/LaneConfiguration.c
 model/ASN1/full-v1-v2/LaneConnectionID.c
-model/ASN1/full-v1-v2/LaneCount.c
 model/ASN1/full-v1-v2/LaneDataAttribute.c
 model/ASN1/full-v1-v2/LaneDataAttributeList.c
 model/ASN1/full-v1-v2/LaneDelimitation.c
@@ -3069,14 +2982,10 @@ model/ASN1/full-v1-v2/LowerTriangularPositiveSemidefiniteMatrices.c
 model/ASN1/full-v1-v2/LowerTriangularPositiveSemidefiniteMatrix.c
 model/ASN1/full-v1-v2/LowerTriangularPositiveSemidefiniteMatrixColumns.c
 model/ASN1/full-v1-v2/MAPEM.c
-model/ASN1/full-v1-v2/MCM.c
 model/ASN1/full-v1-v2/ManagementContainer.c
 model/ASN1/full-v1-v2/ManagementContainerCPM.c
 model/ASN1/full-v1-v2/ManagementContainerV1.c
 model/ASN1/full-v1-v2/ManeuverAssistList.c
-model/ASN1/full-v1-v2/Manoeuvre.c
-model/ASN1/full-v1-v2/ManoeuvreAdviceContainer.c
-model/ASN1/full-v1-v2/ManoeuvreCoordination.c
 model/ASN1/full-v1-v2/MapData-addGrpC.c
 model/ASN1/full-v1-v2/MapData.c
 model/ASN1/full-v1-v2/MapLocationContainer.c
@@ -3088,12 +2997,6 @@ model/ASN1/full-v1-v2/MaterialType.c
 model/ASN1/full-v1-v2/MatrixIncludedComponents.c
 model/ASN1/full-v1-v2/MaxLenghtOfPlatoon.c
 model/ASN1/full-v1-v2/MaxNoOfVehicles.c
-model/ASN1/full-v1-v2/McmAutomationState.c
-model/ASN1/full-v1-v2/McmCategory.c
-model/ASN1/full-v1-v2/McmCategoryType.c
-model/ASN1/full-v1-v2/McmContainer.c
-model/ASN1/full-v1-v2/McmStartPoint.c
-model/ASN1/full-v1-v2/McmTrajectory.c
 model/ASN1/full-v1-v2/MergeDivergeNodeAngle.c
 model/ASN1/full-v1-v2/MessageId.c
 model/ASN1/full-v1-v2/MessageRateHz.c
@@ -3136,15 +3039,6 @@ model/ASN1/full-v1-v2/NativeInteger_print.c
 model/ASN1/full-v1-v2/NativeInteger_rfill.c
 model/ASN1/full-v1-v2/NativeInteger_uper.c
 model/ASN1/full-v1-v2/NativeInteger_xer.c
-model/ASN1/full-v1-v2/NativeReal.c
-model/ASN1/full-v1-v2/NativeReal_aper.c
-model/ASN1/full-v1-v2/NativeReal_ber.c
-model/ASN1/full-v1-v2/NativeReal_jer.c
-model/ASN1/full-v1-v2/NativeReal_oer.c
-model/ASN1/full-v1-v2/NativeReal_print.c
-model/ASN1/full-v1-v2/NativeReal_rfill.c
-model/ASN1/full-v1-v2/NativeReal_uper.c
-model/ASN1/full-v1-v2/NativeReal_xer.c
 model/ASN1/full-v1-v2/Node-LLmD-64b.c
 model/ASN1/full-v1-v2/Node-XY-20b.c
 model/ASN1/full-v1-v2/Node-XY-22b.c
@@ -3262,11 +3156,6 @@ model/ASN1/full-v1-v2/PlatooningRules.c
 model/ASN1/full-v1-v2/PolyPointListV1.c
 model/ASN1/full-v1-v2/PolygonalLine.c
 model/ASN1/full-v1-v2/PolygonalShape.c
-model/ASN1/full-v1-v2/Polynom.c
-model/ASN1/full-v1-v2/PolynomCoefficient.c
-model/ASN1/full-v1-v2/PolynomEndX.c
-model/ASN1/full-v1-v2/PolynomStartX.c
-model/ASN1/full-v1-v2/PolynomXOffset.c
 model/ASN1/full-v1-v2/PosCentMass.c
 model/ASN1/full-v1-v2/PosCentMassV1.c
 model/ASN1/full-v1-v2/PosConfidenceEllipse.c
@@ -3319,14 +3208,6 @@ model/ASN1/full-v1-v2/PtvRequestType.c
 model/ASN1/full-v1-v2/PublicTransportContainer.c
 model/ASN1/full-v1-v2/PublicTransportContainerV1.c
 model/ASN1/full-v1-v2/PurseBalance.c
-model/ASN1/full-v1-v2/REAL.c
-model/ASN1/full-v1-v2/REAL_aper.c
-model/ASN1/full-v1-v2/REAL_jer.c
-model/ASN1/full-v1-v2/REAL_oer.c
-model/ASN1/full-v1-v2/REAL_print.c
-model/ASN1/full-v1-v2/REAL_rfill.c
-model/ASN1/full-v1-v2/REAL_uper.c
-model/ASN1/full-v1-v2/REAL_xer.c
 model/ASN1/full-v1-v2/RSCUnit.c
 model/ASN1/full-v1-v2/RSCode.c
 model/ASN1/full-v1-v2/RSUContainerHighFrequency.c
@@ -3346,7 +3227,6 @@ model/ASN1/full-v1-v2/RailwayLevelCrossingSubCauseCode.c
 model/ASN1/full-v1-v2/RangeV1.c
 model/ASN1/full-v1-v2/RccPart.c
 model/ASN1/full-v1-v2/RearOverhangV1.c
-model/ASN1/full-v1-v2/Reason.c
 model/ASN1/full-v1-v2/ReceiptAuthenticator.c
 model/ASN1/full-v1-v2/ReceiptContract.c
 model/ASN1/full-v1-v2/ReceiptData.c
@@ -3550,7 +3430,6 @@ model/ASN1/full-v1-v2/TimeConfidence.c
 model/ASN1/full-v1-v2/TimeIntervalConfidence.c
 model/ASN1/full-v1-v2/TimeMark.c
 model/ASN1/full-v1-v2/TimeOfMeasurementV1.c
-model/ASN1/full-v1-v2/TimeOfPos.c
 model/ASN1/full-v1-v2/TimeReference.c
 model/ASN1/full-v1-v2/TimestampIts.c
 model/ASN1/full-v1-v2/TimestampItsV1.c
@@ -3579,10 +3458,6 @@ model/ASN1/full-v1-v2/TrailerDetails.c
 model/ASN1/full-v1-v2/TrailerLicencePlateNumber.c
 model/ASN1/full-v1-v2/TrailerPresenceInformation.c
 model/ASN1/full-v1-v2/TrainCharacteristics.c
-model/ASN1/full-v1-v2/Trajectory.c
-model/ASN1/full-v1-v2/TrajectoryInterceptionConfidence.c
-model/ASN1/full-v1-v2/TrajectoryInterceptionIndication.c
-model/ASN1/full-v1-v2/TrajectoryInterceptionProbability.c
 model/ASN1/full-v1-v2/TransitVehicleOccupancy.c
 model/ASN1/full-v1-v2/TransitVehicleStatus.c
 model/ASN1/full-v1-v2/TransmissionAndSpeed.c
@@ -3634,7 +3509,6 @@ model/ASN1/full-v1-v2/VehicleLengthV2.c
 model/ASN1/full-v1-v2/VehicleLengthValue.c
 model/ASN1/full-v1-v2/VehicleLengthValueV1.c
 model/ASN1/full-v1-v2/VehicleLicencePlateNumber.c
-model/ASN1/full-v1-v2/VehicleManoeuvreContainer.c
 model/ASN1/full-v1-v2/VehicleMass.c
 model/ASN1/full-v1-v2/VehicleMassV1.c
 model/ASN1/full-v1-v2/VehicleRole.c

@@ -1,7 +1,7 @@
 #ifndef OPENCDA_SENSOR_H
 #define OPENCDA_SENSOR_H
 
-#include "ns3/OpenCDAClient.h"
+
 #include "ns3/ldm-utils.h"
 #include "ns3/phPoints.h"
 #include "ns3/core-module.h"

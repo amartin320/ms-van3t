@@ -1,7 +1,7 @@
 #ifndef cooperativePerception_H
 #define cooperativePerception_H
 
-#include "ns3/OpenCDAClient.h"
+
 #include "ns3/vdpopencda.h"
 #include "ns3/opencda-sensor.h"
 #include "ns3/MetricSupervisor.h"

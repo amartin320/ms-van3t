@@ -2,7 +2,7 @@
 #define VDPOPENCDA_H
 
 #include "vdp.h"
-#include "ns3/OpenCDAClient.h"
+
 
 
 

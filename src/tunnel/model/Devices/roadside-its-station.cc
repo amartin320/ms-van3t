@@ -86,6 +86,8 @@ namespace ns3
         m_emulation = true;
         m_realtime = true;
         m_sock_emu = Socket::CreateSocket (m_node, TypeId::LookupByName ("ns3::UdpSocketFactory"));
+
+        
         }
 
     }
@@ -94,8 +96,8 @@ namespace ns3
     RoadsideItsStation::SendHelloMessage() {
         NS_LOG_FUNCTION(this);
 
-        std::string latlon = "lat"+std::to_string(m_position_lat)+"lon"+std::to_string(m_position_lon);
-        Ptr<Packet> packet = Create<Packet> ((uint8_t*) latlon.c_str(), latlon.size());
+        std::string message = "HELLO," + std::to_string(m_nodeID)+","+std::to_string(m_position_lat)+","+std::to_string(m_position_lon);
+        Ptr<Packet> packet = Create<Packet> ((uint8_t*) message.c_str(), message.size());
 
         m_sock_emu->Send(packet);
     }
@@ -120,7 +122,7 @@ namespace ns3
         YansWifiPhyHelper wifiPhy;
         
         std::string id = sumoClient->GetStationId (this->GetNode ());
-        unsigned long m_nodeID = std::stol(id.substr (4));
+        m_nodeID = std::stol(id.substr (4));
 
         // Create a new ETSI GeoNetworking socket
         m_sock=GeoNet::createGNPacketSocket(m_node);
@@ -137,6 +139,7 @@ namespace ns3
             }
 
         }
+
 
         // Configure Facilities headers in V2X socket //
 
@@ -161,7 +164,7 @@ namespace ns3
             // Configure retransmission of CAMs through emu socket
             caService->addCARxCallback (std::bind(&RoadsideItsStation::receiveCAM,this,std::placeholders::_1,std::placeholders::_2));
             // Start sending Hello messages
-            Simulator::Schedule(Seconds(0), &RoadsideItsStation::SendHelloMessageCont, this, 5);
+            Simulator::Schedule(Seconds(0), &RoadsideItsStation::SendHelloMessageCont, this, 5 + (std::rand() % 1000) / 1000.0);
 
 
         }
@@ -174,12 +177,13 @@ namespace ns3
 
     void
     RoadsideItsStation::receiveCAM(asn1cpp::Seq<CAM> cam, Address from) {
+        NS_LOG_FUNCTION(this);
         m_cams_received = m_cams_received+1;
         if(m_cams_received == 1) {
             // Send initialization packet
             SendHelloMessage();
         }
-        // Process CAMs receive by other stations
+        // Process CAMs received by other stations
         if(asn1cpp::getField(cam->header.stationId,StationID_t)!=m_nodeID) {
             // Encapsulate CAM into an UDP packet
             std::string encode_result = asn1cpp::uper::encode(cam);
